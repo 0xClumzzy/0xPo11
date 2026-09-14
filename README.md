@@ -47,7 +47,7 @@ Current, working and upcoming items. Checked items are done and verified.
 - [x] Keyconsole `clear`, `exit`, `quit` commands
 - [x] Console cipher dispatch runs in-process (no per-command subprocess)
 - [x] Layered encryption (`+`) and bare `+` usage guard
-- [x] XOR cipher: fixed single-char-key bug (`zip()` truncated to shortest) and space-separator decode issue — key now cycles, round-trip verified
+- [x] XOR cipher: fixed single-char-key bug (`zip()` truncated to shortest) and space-separator decode issue, key now cycles, round-trip verified
 - [x] hashid cipher added (fingerprint hash type by length/charset)
 - [x] Layered decryption (`hex -d + b64 -d + cc -d -k n` reverse-order chains) — round-trip verified
 - [x] Decode-model: console `+` chains, no-mode layers default to `-e`, XOR `-d` space-separator fix
