@@ -25,14 +25,14 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 
 | Phase  | Status | Feature | Purpose |
 |------- |--------|---------|---------|
-| 1 |-[x]| 28 ciphers, XOR, hashing | Core crypto primitives |
-| 2 |-[x]| Keyconsole (interactive shell) | Rapid analysis workflow |
-| 3 |-[-]| Brute force / wordlist support | Credential cracking |
-| 4 |-[ ]| File encryption module | payload encryption |
-| 5 |-[ ]| Key exchange simulation | Understanding key management |
-| 6 |-[ ]| Ransom note generator | Full attack chain simulation |
-| 7 |-[ ]| C2 communication layer | Post-exploitation tooling |
-| 8 |-[ ]| Lateral movement module | Network propagation |
+| 1 | [x] | 28 ciphers, XOR, hashing | Core crypto primitives |
+| 2 | [x] | Keyconsole (interactive shell) | Rapid analysis workflow |
+| 3 | [x] | Brute force / wordlist + `hashid` | Credential cracking & hash ID |
+| 4 | [ ] | File encryption module | payload encryption |
+| 5 | [ ] | Key exchange simulation | Understanding key management |
+| 6 | [ ] | Ransom note generator | Full attack chain simulation |
+| 7 | [ ] | C2 communication layer | Post-exploitation tooling |
+| 8 | [ ] | Lateral movement module | Network propagation |
 
 **Goal:** Complete ransomware simulation framework for understanding offensive techniques at every stage.
 
@@ -200,6 +200,7 @@ Metasploit-style interactive shell for rapid cipher analysis and testing.
 | MD5 | `md5` | MD5 hash |
 | SHA1 | `sha1` | SHA1 hash |
 | SHA224 | `sha224` | SHA224 hash |
+| SHA256 | `sha256` | SHA256 hash |
 | SHA384 | `sha384` | SHA384 hash |
 | SHA512 | `sha512` | SHA512 hash |
 
@@ -219,6 +220,7 @@ Metasploit-style interactive shell for rapid cipher analysis and testing.
 | Phonetic | `pho` | NATO phonetic alphabet |
 | Pixel | `pix` | Image pixel cipher |
 | Code Transcript | `ct` | Code transcript |
+| Payloads | `cp` | Payload generation (`-p`, `-g`) |
 | Hash Identifier | `hashid` | Fingerprint hash type by length/charset |
 
 ## Arguments
