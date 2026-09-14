@@ -1,12 +1,14 @@
 ```
-╔═══════════════════════════════╗
-║         0 x P o 1 1           ║
-║   CRYTO SUITE by 0XClumzZy    ║
-╚═══════════════════════════════╝
+  ___        ┌──────────────┐
+ / _ \__  __/│ ◆ ENCRYPT    │
+| | | \ \/ / │ ◆ DECRYPT    │
+| |_| |>  <  │ ◆ CRACK      │
+ \___//_/\_\ └──────────────┘
+  0    x     [ REDACTED ]
 ```
 ## Overview
 
-0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 29 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
+0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 28 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
 
 Built by [0xSESSIONS](https://github.com/0xClumzzy).
 
@@ -23,7 +25,7 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 
 | Phase | Status | Feature | Purpose |
 |-------|--------|---------|---------|
-| 1 | ✅ | 29 ciphers, XOR, hashing | Core crypto primitives |
+| 1 | ✅ | 28 ciphers, XOR, hashing | Core crypto primitives |
 | 2 | ✅ | Keyconsole (interactive shell) | Rapid analysis workflow |
 | 3 | ✅ | Brute force / wordlist support | Credential cracking |
 | 4 | 🔜 | File encryption module | payload encryption |
@@ -33,6 +35,35 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 | 8 | 🔜 | Lateral movement module | Network propagation |
 
 **Goal:** Complete ransomware simulation framework for understanding offensive techniques at every stage.
+
+## Task List
+
+Current, working and upcoming items. Checked items are done and verified.
+
+- [x] CLI flags added: `--version` / `-v`, `-h`, `-u/--update`, `-rm/--remove`
+- [x] Keyconsole tab completion for ciphers and commands
+- [x] Keyconsole `list` command shows all ciphers with names
+- [x] Keyconsole `clear`, `exit`, `quit` commands
+- [x] Console cipher dispatch runs in-process (no per-command subprocess)
+- [x] Layered encryption (`+`) and bare `+` usage guard
+- [x] XOR cipher: fixed single-char-key bug (`zip()` truncated to shortest) and space-separator decode issue — key now cycles, round-trip verified
+- [x] `hashid` cipher added (fingerprint hash type by length/charset)
+- [x] Layered decryption (`hex -d + b64 -d + cc -d -k n` reverse-order chains) — round-trip verified
+- [x] Decode-model: console `+` chains, no-mode layers default to `-e`, XOR `-d` space-separator fix
+- [ ] Decode-model: audit all 28 ciphers for a working `-d` path (some only `-e`/hash)
+- [ ] Decode-model: add a unified "auto-detect then decode" flag (hashid → decode in one command)
+- [ ] Decode-model: per-cipher decode examples for the phonebook (`key <cipher>` help)
+- [ ] Decide: pure-Python rework vs. documented optional deps for the 4 ciphers below
+- [ ] Fix `blowfish` cipher — missing `blowfish` package
+- [ ] Fix `twofish` cipher — missing `twofish` package
+- [ ] Fix `ct` cipher — missing `pyenchant` package
+- [ ] Fix `pix` cipher — missing `Pillow` package
+- [ ] `pix` channel arg required (crashes with `-e -t` alone) — make `-c` optional/default
+- [ ] Fix empty-wordlist brute force crash (e.g. `cc -b` with no matching wordlist)
+- [ ] Payload generator (`cp`) — ship default payload templates
+- [ ] Add `help <cipher>` to keyconsole for per-cipher usage
+- [ ] Add per-cipher `-h`/usage flag consistency
+- [ ] Remove ghost `translate` entry — no module exists; decide: implement or drop the reference
 
 ## Tech Stack
 
@@ -57,13 +88,14 @@ No external crypto libraries. Everything operates on raw ASCII values and byte a
 
 ### Optional Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| numpy, Pillow | Image cipher support |
-| pyenchant | Wordlist filtering |
-| twofish, blowfish | Modern block ciphers |
-| googletrans | Translation cipher |
-| qrcode | QR code generation |
+Only needed for ciphers that currently fail without them:
+
+| Package | Purpose | Needed by |
+|---------|---------|-----------|
+| Pillow | Image cipher support | `pix` |
+| pyenchant | Wordlist filtering | `ct` |
+| twofish | Block cipher | `twofish` |
+| blowfish | Block cipher | `blowfish` |
 
 ## Installation
 
@@ -103,6 +135,18 @@ key md5 -e -t "malware_sample"
 ```
 
 Generate hashes for tracking samples, creating YARA rules, or matching against known malware databases.
+
+### Hash Identification - From Unknown Hash to Plaintext
+
+```bash
+key hashid -e -t "1fb9c14e934b825a62d15230cc0c2bd1"
+# Output: MD5 (or NTLM - same length/charset, test both)
+
+key md5 -b -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
+# Output: Decoded MD5 | p@ssw0rd123
+```
+
+Fingerprint an unknown hash by length and charset, then crack it with a wordlist — the analyst's identify-then-crack loop.
 
 ### Layered Encryption - Payload Obfuscation
 
@@ -175,7 +219,7 @@ Metasploit-style interactive shell for rapid cipher analysis and testing.
 | Phonetic | `pho` | NATO phonetic alphabet |
 | Pixel | `pix` | Image pixel cipher |
 | Code Transcript | `ct` | Code transcript |
-| Translate | `translate` | Google Translate |
+| Hash Identifier | `hashid` | Fingerprint hash type by length/charset |
 
 ## Arguments
 

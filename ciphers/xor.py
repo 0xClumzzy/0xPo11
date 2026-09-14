@@ -26,19 +26,18 @@ def encode(input):
     text = input.text
 
     if key and text:
-        output = " ".join([chr(ord(c1) ^ ord(c2)) for (c1,c2) in zip(text,key)])
+        output = " ".join([chr(ord(c) ^ ord(key[i % len(key)])) for i, c in enumerate(text)])
         return [output, True]
     else:
-        return ["Please provide -k <key> argument", False] 
-
-    return output
+        return ["Please provide -k <key> argument", False]
 
 def decode(input):
     key = input.key
     text = input.text
 
     if key and text:
-        output = " ".join([chr(ord(c1) ^ ord(c2)) for (c1,c2) in zip(text,key)])
+        text = text.replace(" ", "")
+        output = " ".join([chr(ord(c) ^ ord(key[i % len(key)])) for i, c in enumerate(text)])
         return [output, True]
     else:
         return ["Please provide -k <key> argument", False]
