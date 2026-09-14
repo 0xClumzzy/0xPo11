@@ -33,8 +33,9 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 | 6 | [ ] | Ransom note generator | Full attack chain simulation |
 | 7 | [ ] | C2 communication layer | Post-exploitation tooling |
 | 8 | [ ] | Lateral movement module | Network propagation |
+| 9 | [ ] | Rust migration | Full rewrite in Rust for speed/safety |
 
-**Goal:** Complete ransomware simulation framework for understanding offensive techniques at every stage.
+**Goal:** Complete ransomware simulation framework for understanding offensive techniques at every stage. **Long-term:** reimplement the suite in Rust (RustCrypto-style primitives, native binaries, single-static-binary distribution).
 
 ## Task List
 
