@@ -23,16 +23,16 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 
 ## Roadmap
 
-| Phase | Status | Feature | Purpose |
-|-------|--------|---------|---------|
-| 1 | ✅ | 28 ciphers, XOR, hashing | Core crypto primitives |
-| 2 | ✅ | Keyconsole (interactive shell) | Rapid analysis workflow |
-| 3 | ✅ | Brute force / wordlist support | Credential cracking |
-| 4 | 🔜 | File encryption module | payload encryption |
-| 5 | 🔜 | Key exchange simulation | Understanding key management |
-| 6 | 🔜 | Ransom note generator | Full attack chain simulation |
-| 7 | 🔜 | C2 communication layer | Post-exploitation tooling |
-| 8 | 🔜 | Lateral movement module | Network propagation |
+| Phase  | Status | Feature | Purpose |
+|------- |--------|---------|---------|
+| 1 |-[x]| 28 ciphers, XOR, hashing | Core crypto primitives |
+| 2 |-[x]| Keyconsole (interactive shell) | Rapid analysis workflow |
+| 3 |-[-]| Brute force / wordlist support | Credential cracking |
+| 4 |-[ ]| File encryption module | payload encryption |
+| 5 |-[ ]| Key exchange simulation | Understanding key management |
+| 6 |-[ ]| Ransom note generator | Full attack chain simulation |
+| 7 |-[ ]| C2 communication layer | Post-exploitation tooling |
+| 8 |-[ ]| Lateral movement module | Network propagation |
 
 **Goal:** Complete ransomware simulation framework for understanding offensive techniques at every stage.
 
@@ -146,7 +146,7 @@ key md5 -b -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
 # Output: Decoded MD5 | p@ssw0rd123
 ```
 
-Fingerprint an unknown hash by length and charset, then crack it with a wordlist — the analyst's identify-then-crack loop.
+Fingerprint an unknown hash by length and charset, then crack it with a wordlist.
 
 ### Layered Encryption - Payload Obfuscation
 
