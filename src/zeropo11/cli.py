@@ -54,7 +54,7 @@ def main(
     lingo: str,
     words: bool,
 ) -> None:
-    """0xPo11 - A Cryptographic Suite by CosmodiumCS.
+    """0xPo11 - A Cryptographic Suite by 0xClumzzy.
 
     Run without arguments to enter the interactive console.
     """
@@ -228,7 +228,7 @@ def _do_update() -> None:
 
     try:
         result = subprocess.run(
-            ["curl", "-s", "https://raw.githubusercontent.com/CosmodiumCS/SkeletonKey/main/version.txt"],
+            ["curl", "-s", "https://raw.githubusercontent.com/0xClumzzy/0xPo11/main/version.txt"],
             capture_output=True,
             text=True,
             timeout=10,

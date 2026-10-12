@@ -8,8 +8,8 @@ rm -rf "$HOME/.0xPo11"
 
 # clone latest
 cd /tmp
-git clone https://github.com/CosmodiumCS/SkeletonKey
-cd SkeletonKey
+git clone https://github.com/0xClumzzy/0xPo11
+cd 0xPo11
 
 # install
 bash install.sh

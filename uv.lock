@@ -1008,7 +1008,7 @@ wheels = [
 ]
 
 [[package]]
-name = "skeletonkey"
+name = "zeropo11"
 version = "2.0.0"
 source = { editable = "." }
 dependencies = [
