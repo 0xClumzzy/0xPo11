@@ -51,27 +51,27 @@ Current, working and upcoming items. Checked items are done and verified.
 - [x] hashid cipher added (fingerprint hash type by length/charset)
 - [x] Layered decryption (`hex -d + b64 -d + cc -d -k n` reverse-order chains) — round-trip verified
 - [x] Decode-model: console `+` chains, no-mode layers default to `-e`, XOR `-d` space-separator fix
-- [ ] Decode-model: audit all 28 ciphers for a working `-d` path (some only `-e`/hash)
-- [ ] Decode-model: add a unified "auto-detect then decode" flag (hashid → decode in one command)
-- [ ] Decode-model: per-cipher decode examples for the phonebook (`key <cipher>` help)
-- [ ] Decide: pure-Python rework vs. documented optional deps for the 4 ciphers below
+- [x] Decode-model: audit all 28 ciphers for a working `-d` path (some only `-e`/hash)
+- [x] Decode-model: add a unified "auto-detect then decode" flag (`-ad` → hashid → brute in one command)
+- [x] Decode-model: per-cipher decode examples for the phonebook (`key <cipher> -h`)
+- [x] Decide: pure-Python rework vs. documented optional deps for the 4 ciphers below
 - [ ] Fix `blowfish` cipher — missing `blowfish` package
 - [ ] Fix `twofish` cipher — missing `twofish` package
 - [ ] Fix `ct` cipher — missing `pyenchant` package
 - [ ] Fix `pix` cipher — missing `Pillow` package
 - [ ] `pix` channel arg required (crashes with `-e -t` alone) — make `-c` optional/default
-- [ ] Fix empty-wordlist brute force crash (e.g. `cc -b` with no matching wordlist)
-- [ ] Payload generator (`cp`) — ship default payload templates
-- [ ] Add `help <cipher>` to keyconsole for per-cipher usage
-- [ ] Add per-cipher `-h`/usage flag consistency
-- [ ] Remove ghost `translate` entry — no module exists; decide: implement or drop the reference
+- [x] Fix empty-wordlist brute force crash (e.g. `cc -b` with no matching wordlist)
+- [x] Payload generator (`cp`) — ship default payload templates
+- [x] Add `help <cipher>` to keyconsole for per-cipher usage
+- [x] Add per-cipher `-h`/usage flag consistency
+- [x] Remove ghost `translate` entry — no module exists; decide: implement or drop the reference
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
 | Language | Python 3.10+ |
-| CLI | argparse |
+| CLI | Click |
 | Color output | colorama |
 | Package manager | pip / setuptools |
 | Installer | Bash |
@@ -89,7 +89,7 @@ No external crypto libraries. Everything operates on raw ASCII values and byte a
 
 ### Optional Dependencies
 
-Only needed for ciphers that currently fail without them:
+Only needed for ciphers that currently fail without them. Each is imported lazily, so the rest of the suite works fine without them — running an affected cipher prints a clean `Install X: pip install X` hint:
 
 | Package | Purpose | Needed by |
 |---------|---------|-----------|
@@ -158,6 +158,34 @@ key cc -e -t "payload" -k 3 + b64 -e
 
 Chain multiple ciphers to simulate how packers and obfuscators layer transformations to evade detection.
 
+### Auto-Decode - Unknown Hash to Plaintext in One Command
+
+```bash
+key -ad -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
+# Output: Found: p@ssw0rd123
+```
+
+`-ad` fingerprints the hash with `hashid`, then brutes it against the wordlist — no need to know the hash type first.
+
+### Payload Generator
+
+```bash
+key cp -p duckyscript.txt            # copy a bundled template into the current dir
+key cp -g python.py -o ~/payloads    # -g is an alias for -p; -o picks the output dir
+# seeded templates: duckyscript.txt  powershell.ps1  bash.sh  python.py
+```
+
+`cp` ships default payload templates in the wheel, seeds them into `~/.0xPo11/resources/payloads/` on first use, and user payloads dropped in that dir take precedence.
+
+### Per-Cipher Help
+
+```bash
+key cc -h
+key cc --help
+```
+
+Every cipher exposes a consistent `key <cipher> -h` / `--help` usage menu with working encode/decode examples — no need to memorize flags. The same menu is available inside the keyconsole via `help <cipher>`.
+
 ### Keyconsole - Interactive Analysis Shell
 
 ```bash
@@ -165,6 +193,8 @@ key
 [~] user@0xPo11 $ xor -e -t "cmd.exe /c powershell" -k "K"
 [~] user@0xPo11 $ b64 -d -t "Y21kLmV4ZSAvYyBwb3dlcnNoZWxs"
 [~] user@0xPo11 $ md5 -e -t "sample.exe"
+[~] user@0xPo11 $ help cc          # per-cipher usage, same menus as key cc -h
+[~] user@0xPo11 $ list
 ```
 
 Metasploit-style interactive shell for rapid cipher analysis and testing.
@@ -231,12 +261,27 @@ Metasploit-style interactive shell for rapid cipher analysis and testing.
 | `-e` | Encrypt/Encode |
 | `-d` | Decrypt/Decode |
 | `-b` | Break/Brute force |
+| `-ad` | Auto-detect hash type, then brute (hashid → crack in one command) |
 | `-t` | Input text |
 | `-k` | Encryption key |
 | `-i` | Input file |
 | `-o` | Output file |
 | `-w` | Wordlist for brute force |
 | `-r` | Range for brute force |
+| `-s` | Hash salt |
+| `-a` | Alphabet for brute force |
+| `-ex` | Chars to exclude from brute force |
+| `-md` | Encryption mode (e.g. `cbc` for blowfish) |
+| `--iv` | Initialization vector |
+| `-nc` | Nonce value |
+| `-c` | Pixel channel (0/1/2, for `pix`) |
+| `-ii` | Input image path (for `pix`) |
+| `-g` | Generate a payload template (`cp`) |
+| `-p` | Use a payload template (`cp`) |
+| `-v` / `--version` | Show version |
+| `-u` / `--update` | Check for updates |
+| `-rm` / `--remove` / `--uninstall` | Uninstall 0xPo11 |
+| `-h` / `--help` | Root help, or per-cipher help after a cipher name |
 
 ## Uninstalling
 
