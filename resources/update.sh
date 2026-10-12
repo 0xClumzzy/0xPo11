@@ -1,17 +1,20 @@
 #!/bin/bash
-# updater for 0xPo11
+# updater for 0xPo11 (pip-based)
 
 echo "[*] Updating 0xPo11..."
 
-# remove old version
-rm -rf "$HOME/.0xPo11"
+# build in a temp dir; never clobber a local working copy
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
 
-# clone latest
-cd /tmp
-git clone https://github.com/0xClumzzy/0xPo11
-cd 0xPo11
+if ! git clone --quiet https://github.com/0xClumzzy/0xPo11 "$TMP_DIR/0xPo11"; then
+    echo "[-] git clone failed"
+    exit 1
+fi
 
-# install
+cd "$TMP_DIR/0xPo11" || exit 1
+
+# reuse the pip-based installer; PYTHON is inherited when set
 bash install.sh
 
 echo "[+] 0xPo11 updated successfully!"
