@@ -16,6 +16,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key rc -e -t "hello"
+  key rc -d -t "olleh"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

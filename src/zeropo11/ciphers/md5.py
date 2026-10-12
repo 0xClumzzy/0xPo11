@@ -46,7 +46,7 @@ class Cipher(BaseCipher):
         if not text:
             return CipherResult("Please provide -t <hash to crack>", False)
         candidates = []
-        if wordlist:
+        if wordlist is not None:
             candidates = wordlist
         elif range_str:
             parts = range_str.split(",")

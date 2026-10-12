@@ -83,6 +83,7 @@ OPTIONS:
   -k, --key <key>    Encryption key (text)
 EXAMPLES:
   key vc -e -t "hello" -k "secret"
+  key vc -d -t "zincs" -k "secret"
   key vc -b -t "encrypted text"
 """
 

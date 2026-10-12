@@ -18,6 +18,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key url -e -t "hello world"
+  key url -d -t "hello%20world"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

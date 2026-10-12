@@ -16,6 +16,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key hex -e -t "hello"
+  key hex -d -t "68656c6c6f"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

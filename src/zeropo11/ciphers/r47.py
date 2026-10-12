@@ -16,6 +16,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key r47 -e -t "Hello World!"
+  key r47 -d -t "w6==@ (@C=5P"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

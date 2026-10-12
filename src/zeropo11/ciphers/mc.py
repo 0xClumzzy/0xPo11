@@ -23,6 +23,7 @@ OPTIONS:
   -k, --key <key>    Encryption key (integer)
 EXAMPLES:
   key mc -e -t "hello" -k 3
+  key mc -d -t "vmhhq" -k 3
 """
 
     def encode(self, args: object) -> CipherResult:

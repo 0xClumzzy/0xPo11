@@ -25,6 +25,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key pho -e -t "hello"
+  key pho -d -t "Hotel Echo Lima Lima Oscar"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

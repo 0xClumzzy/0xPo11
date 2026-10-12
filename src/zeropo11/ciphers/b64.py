@@ -20,6 +20,7 @@ OPTIONS:
   -o, --output <file>  Output file
 EXAMPLES:
   key b64 -e -t "hello world"
+  key b64 -d -t "aGVsbG8gd29ybGQ="
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

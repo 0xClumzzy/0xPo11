@@ -18,6 +18,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key mo -e -t "hello"
+  key mo -d -t "jgnnq"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

@@ -16,7 +16,8 @@ OPTIONS:
   -t, --text <text>  Input text
   -k, --key <key>    Encryption key
 EXAMPLES:
-  key xor -e -t "hello" -k "key"
+  key xor -e -t "a1b2" -k "1a2b"
+  key xor -d -t "PPPP" -k "1a2b"
 """
 
     def _xor(self, text: str, key: str) -> str:

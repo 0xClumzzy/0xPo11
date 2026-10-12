@@ -16,6 +16,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key bin -e -t "hello"
+  key bin -d -t "01101000 01100101 01101100 01101100 01101111"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

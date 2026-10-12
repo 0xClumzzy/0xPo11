@@ -23,7 +23,8 @@ FLAGS:
 OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
-  key 1337 -e -t "hello"
+  key 1337 -e -t "abc"
+  key 1337 -d -t "48("
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

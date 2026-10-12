@@ -23,6 +23,7 @@ OPTIONS:
   -t, --text <text>              Input text to encrypt or decrypt
 EXAMPLES:
   key cc -e -k 5 -t hello -ex "asd[]"
+  key cc -d -k 5 -t "mjqqt" -ex "asd[]"
 """
 
     def encode(self, args: object) -> CipherResult:

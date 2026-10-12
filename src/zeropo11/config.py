@@ -82,7 +82,7 @@ HELP_MENU = Fore.CYAN + """
 │       [sha512] ───── SHA512 Hash                            │
 │       [twofish] ──── Twofish Encryption                     │
 │       [blowfish] ─── Blowfish Encryption                    │
-│       [translate] ── Google Translate API                   │
+│       [hashid] ───── Hash Identifier                        │
 ├─────────────────────────────────────────────────────────────┤
 │ [■] ARG 2. Ciphering Method                                 │
 │       [-e] ────────── Encrypt/Encode                        │
@@ -99,14 +99,17 @@ HELP_MENU = Fore.CYAN + """
 │       [-w] ────────── Wordlist                              │
 │       [-a] ────────── Custom Alphabet                       │
 │       [-md] ───────── Encryption Mode                       │
-│       [-src] ──────── Source Language                       │
-│       [-dest] ─────── Destination Language                  │
+│       [-ad] ───────── Auto-Decode Hash                      │
+│       [-c] ────────── Pixel Channel                         │
+│       [-p] ────────── Payload Template                      │
+│       [-g] ────────── Generate Template                     │
 │       [-lingo] ────── Set Language ["en_US" Default]        │
 │       [-words] ────── Pull Words From Output                │
 ├─────────────────────────────────────────────────────────────┤
-│ [■] 0xPo11 Arguments                                         │
-│       [--help] ────── help                                  │
-│       [--version] ─── version                               │
-│       [--update] ──── update                                │
+│ [■] 0xPo11 Arguments                                        │
+│       [-h / --help] ─ help                                  │
+│       [--version] ─── version / -v                          │
+│       [--update] ──── update / -u                           │
+│       [-rm] ───────── remove / uninstall                    │
 └─────────────────────────────────────────────────────────────┘
 """ + Fore.RESET

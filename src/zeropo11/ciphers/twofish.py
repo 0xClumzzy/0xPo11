@@ -20,6 +20,7 @@ OPTIONS:
   -o, --output <file> Output file (optional, for piping)
 EXAMPLES:
   key twofish -e -t "hello" -k "secretkey"
+  key twofish -d -t "58d0117a82ffbf3652f0c8cd2088af48" -k "secretkey"
 """
 
     def encode(self, args):

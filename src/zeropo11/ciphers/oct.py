@@ -16,6 +16,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key oct -e -t "hello"
+  key oct -d -t "150 145 154 154 157"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

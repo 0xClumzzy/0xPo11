@@ -16,6 +16,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key r13 -e -t "hello"
+  key r13 -d -t "uryyb"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

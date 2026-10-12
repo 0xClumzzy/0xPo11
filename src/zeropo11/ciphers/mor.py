@@ -30,6 +30,7 @@ OPTIONS:
   -t, --text <text>  Input text
 EXAMPLES:
   key mor -e -t "hello world"
+  key mor -d -t ".... . .-.. .-.. ---"
 """
     def encode(self, args):
         text = getattr(args, 'text', None)

@@ -16,6 +16,7 @@ OPTIONS:
   -nc, --nonce <n>   Nonce for CTR mode (auto-generated if omitted)
 EXAMPLES:
   key blowfish -e -t "hello" -k "secret" -md cbc
+  key blowfish -d -t "b7d82e988039fd53" -k "secret" -md cbc
 """
 
 
