@@ -38,7 +38,8 @@ src/zeropo11/
     ├── registry.py            # auto-discovery, dispatch by command string
     ├── cc.py  b64.py  ...     # one module per cipher, class always named `Cipher`
     ├── hashid.py              # fingerprint-by-length RULES table
-    ├── fe.py                  # password-based authenticated file encryption
+    ├── fe.py                  # password-based authenticated file encryption (+ ssh transport)
+    ├── rn.py                  # ransom note generator (simulation)
     ├── cp.py                  # payload template copier (ships in the wheel)
     └── templates/payloads/    # bundled payload templates (setuptools package-data)
 tests/                         # pytest suite (7 modules)
@@ -390,6 +391,10 @@ templates.
   in `help_menu` runnable against the current code (several demos were caught wrong and fixed).
 - **HELP_MENU is hand-maintained** in `config.py` — adding a cipher means editing it or
   `key -h` output will be stale.
+- **Binary ciphers own their I/O.** `rn` sets `binary = True` for the same reason `fe` does, but
+  with a twist: it *reads* an `fe`-encrypted file only to pull the salt out of its header (so the
+  victim ID is deterministic per file), then generates text. A `-o` path is written by the cipher;
+  with `-o` omitted the note is returned as the result for `handle_output` to print.
 - **`hashid` is a heuristic.** Length+charset+prefix only; MD5/NTLM/MySQL 4.1 share 32 chars
   and SHA256/Whirlpool share 64. `-ad` resolves ambiguity by trying, not guessing.
 - **Legacy root code** (`main.py`, `ciphers/`, `mods/`) must import nothing new; it exists only

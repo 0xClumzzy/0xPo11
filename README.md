@@ -8,7 +8,7 @@
 ```
 ## Overview
 
-0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 29 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
+0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 30 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
 
 Built by [0xSESSIONS](https://github.com/0xClumzzy). Developer guide: [README.dev.md](./README.dev.md).
 
@@ -25,12 +25,12 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 
 | Phase  | Status | Feature | Purpose |
 |------- |--------|---------|---------|
-| 1 | [x] | 29 ciphers, XOR, hashing | Core crypto primitives |
+| 1 | [x] | 30 ciphers, XOR, hashing | Core crypto primitives |
 | 2 | [x] | Keyconsole (interactive shell) | Rapid analysis workflow |
 | 3 | [x] | Brute force / wordlist + `hashid` | Credential cracking & hash ID |
 | 4 | [x] | File encryption module | payload encryption |
 | 5 | [ ] | Key exchange simulation | Understanding key management |
-| 6 | [ ] | Ransom note generator | Full attack chain simulation |
+| 6 | [x] | Ransom note generator | Full attack chain simulation |
 | 7 | [ ] | C2 communication layer | Post-exploitation tooling |
 | 8 | [ ] | Lateral movement module | Network propagation |
 | 9 | [ ] | Rust migration | Full rewrite in Rust for speed/safety |
@@ -53,6 +53,8 @@ Current, working and upcoming items. Checked items are done and verified.
 - [x] Decode-model: console `+` chains, no-mode layers default to `-e`, XOR `-d` space-separator fix
 - [x] Decode-model: audit all 28 ciphers for a working `-d` path (some only `-e`/hash)
 - [x] File encryption module (`fe`): PBKDF2 password derivation + SHA-256 CTR keystream + HMAC-SHA256 integrity, streaming 1 MiB chunks, versioned `0xFE` file format
+- [x] Remote file encryption (`fe --host`): streams files over system ssh, no agent, explicit `--local-in`/`--local-out` locality
+- [x] Ransom note generator (`rn`): three extortion-note templates (generic/polite/press), victim ID derived from the encrypted file's salt, deadline + key-fingerprint quoting
 - [x] Decode-model: add a unified "auto-detect then decode" flag (`-ad` → hashid → brute in one command)
 - [x] Decode-model: per-cipher decode examples for the phonebook (`key <cipher> -h`)
 - [x] Decide: pure-Python rework vs. documented optional deps for the 4 ciphers below
@@ -240,6 +242,17 @@ fe -d --host deploy@10.0.0.5 --local-in -i db.enc -o /data/db.dump -k "hunter2"
 
 With `--host`, paths default to the **remote** side. `--local-in` / `--local-out` move one side back to this machine, so you always state explicitly which endpoint each path refers to. Failures (bad path, dead host, refused auth) come back as the server's own error, and a stalled transfer is killed at `--timeout` seconds.
 
+### Ransom Note - Simulating the Extortion Artifact
+
+```bash
+rn -e -i victims.db.enc -k "hunter2" -tm press -o NOTE.txt
+rn -e -tm polite -dl 24
+```
+
+`rn` generates the note that accompanies encrypted files, in three operator voices: `generic` (threat-and-authority), `polite` (customer-support framing), and `press` (fake press release threatening publication). Given an `fe`-encrypted file it derives the **victim ID from that file's salt**, so the same file always yields the same note — the coupling a real chain relies on. `-dl` sets the deadline, and the password's key fingerprint is quoted when `-k` is supplied.
+
+Every note carries a simulation footer and obviously-fake payment placeholders, so output can never be mistaken for an operational demand. The point is pattern analysis: deadline pressure, the "free test decryption" trust trick, and the anti-forensic warnings ("don't use third-party tools") that appear in nearly every real sample.
+
 ### Per-Cipher Help
 
 ```bash
@@ -361,6 +374,7 @@ Same length/charset means some types are indistinguishable — the tool flags th
 | Payloads | `cp` | Payload generation (`-p`, `-g`) |
 | Hash Identifier | `hashid` | Fingerprint hash type by length/charset |
 | File Encryption | `fe` | Password-based authenticated file encryption |
+| Ransom Note | `rn` | Extortion-note simulation (SE pattern analysis) |
 
 ## Arguments
 
@@ -388,6 +402,8 @@ Same length/charset means some types are indistinguishable — the tool flags th
 | `--timeout` | SSH timeout for `--host` (default: 120 seconds) |
 | `--local-in` | `-i` is a local path even with `--host` |
 | `--local-out` | `-o` is a local path even with `--host` |
+| `-tm` | Note template for `rn`: `generic` / `polite` / `press` |
+| `-dl` | Payment deadline in hours for `rn` (default: 72) |
 | `-c` | Pixel channel (0/1/2, for `pix`) |
 | `-ii` | Input image path (for `pix`) |
 | `-g` | Generate a payload template (`cp`) |

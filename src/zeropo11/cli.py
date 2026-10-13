@@ -74,6 +74,8 @@ def _build_args(
     timeout: int | None = None,
     local_in: bool = False,
     local_out: bool = False,
+    template: str | None = None,
+    deadline: str | None = None,
 ) -> _Args:
     """Build an args namespace for cipher functions."""
     return _Args(
@@ -101,6 +103,8 @@ def _build_args(
         timeout=timeout,
         local_in=local_in,
         local_out=local_out,
+        template=template,
+        deadline=deadline,
     )
 
 
@@ -511,6 +515,8 @@ def _run_console() -> None:
 @click.option(
     "--local-out", "local_out", is_flag=True, help="Output path is local even with --host"
 )
+@click.option("-tm", "--template", "template", help="Ransom note voice (rn)")
+@click.option("-dl", "--deadline", "deadline", help="Ransom note deadline in hours (rn)")
 @click.option("-ii", "--inputImage", "input_image", help="Input image path")
 @click.version_option(
     __version__,
@@ -551,6 +557,8 @@ def main(
     timeout: int | None,
     local_in: bool,
     local_out: bool,
+    template: str | None,
+    deadline: str | None,
 ) -> None:
     """0xPo11 - Multi-format encryption toolkit."""
     global _last_result
@@ -656,6 +664,8 @@ def main(
         timeout=timeout,
         local_in=local_in,
         local_out=local_out,
+        template=template,
+        deadline=deadline,
     )
 
     _last_result = _dispatch(cipher_obj, args, mode or mode_mode, payload, generate)

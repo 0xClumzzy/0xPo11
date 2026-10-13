@@ -84,6 +84,7 @@ HELP_MENU = Fore.CYAN + """
 │       [blowfish] ─── Blowfish Encryption                    │
 │       [hashid] ───── Hash Identifier                        │
 │       [fe] ───────── File Encryption                        │
+│       [rn] ───────── Ransom Note                            │
 ├─────────────────────────────────────────────────────────────┤
 │ [■] ARG 2. Ciphering Method                                 │
 │       [-e] ────────── Encrypt/Encode                        │
