@@ -229,6 +229,17 @@ Inline data works too — `fe -e -t "secret" -k "pass"` prints the ciphertext as
 
 > Educational implementation, not an audited crypto tool. Use [age](https://github.com/FiloSottile/age) or GPG to protect real secrets.
 
+### Remote Hosts - Encrypt Files on Another Machine
+
+```bash
+fe -e --host deploy@10.0.0.5 -i /data/db.dump -k "hunter2" --local-out db.enc
+fe -d --host deploy@10.0.0.5 --local-in -i db.enc -o /data/db.dump -k "hunter2"
+```
+
+`--host` streams the file over the system `ssh` binary — no remote agent, no remote install, nothing added to the far machine. Plaintext passes through the pipe and process memory only: it is never written to the remote disk and never lands in a local temp file. Files use the same `0xFE` format, so anything encrypted remotely decrypts locally and vice versa.
+
+With `--host`, paths default to the **remote** side. `--local-in` / `--local-out` move one side back to this machine, so you always state explicitly which endpoint each path refers to. Failures (bad path, dead host, refused auth) come back as the server's own error, and a stalled transfer is killed at `--timeout` seconds.
+
 ### Per-Cipher Help
 
 ```bash
@@ -372,6 +383,11 @@ Same length/charset means some types are indistinguishable — the tool flags th
 | `--iv` | Initialization vector |
 | `-nc` | Nonce value |
 | `-it` | PBKDF2 iterations for `fe` (default: 200000) |
+| `--host` | Remote host for `fe` (`user@server`), streamed over ssh |
+| `--port` | SSH port for `--host` (default: 22) |
+| `--timeout` | SSH timeout for `--host` (default: 120 seconds) |
+| `--local-in` | `-i` is a local path even with `--host` |
+| `--local-out` | `-o` is a local path even with `--host` |
 | `-c` | Pixel channel (0/1/2, for `pix`) |
 | `-ii` | Input image path (for `pix`) |
 | `-g` | Generate a payload template (`cp`) |

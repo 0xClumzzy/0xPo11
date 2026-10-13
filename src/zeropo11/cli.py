@@ -69,6 +69,11 @@ def _build_args(
     generate: str | None = None,
     output: str | None = None,
     iterations: int | None = None,
+    host: str | None = None,
+    port: int | None = None,
+    timeout: int | None = None,
+    local_in: bool = False,
+    local_out: bool = False,
 ) -> _Args:
     """Build an args namespace for cipher functions."""
     return _Args(
@@ -91,6 +96,11 @@ def _build_args(
         generate=generate,
         output=output,
         iterations=iterations,
+        host=host,
+        port=port,
+        timeout=timeout,
+        local_in=local_in,
+        local_out=local_out,
     )
 
 
@@ -494,6 +504,13 @@ def _run_console() -> None:
 @click.option(
     "-it", "--iterations", "iterations", type=int, help="PBKDF2 iterations (file encryption)"
 )
+@click.option("--host", "host", help="Remote host for file encryption (user@server)")
+@click.option("--port", "port", type=int, help="SSH port (default: 22)")
+@click.option("--timeout", "timeout", type=int, help="SSH timeout in seconds (default: 120)")
+@click.option("--local-in", "local_in", is_flag=True, help="Input path is local even with --host")
+@click.option(
+    "--local-out", "local_out", is_flag=True, help="Output path is local even with --host"
+)
 @click.option("-ii", "--inputImage", "input_image", help="Input image path")
 @click.version_option(
     __version__,
@@ -529,6 +546,11 @@ def main(
     do_remove: bool,
     auto_decode: bool,
     iterations: int | None,
+    host: str | None,
+    port: int | None,
+    timeout: int | None,
+    local_in: bool,
+    local_out: bool,
 ) -> None:
     """0xPo11 - Multi-format encryption toolkit."""
     global _last_result
@@ -583,6 +605,17 @@ def main(
         click.echo(f"{Fore.CYAN}{cipher_obj.help_menu}{END}")
         return
 
+    # a bare path after a flag means a typo (e.g. `--local-out <path>` where
+    # `-o <path>` was meant); click would otherwise swallow it silently
+    stray = [a for a in (ctx.args or []) if not a.startswith("-")]
+    if stray:
+        click.echo(
+            f"{FAIL}[✖] Unexpected argument: '{stray[0]}'{END}\n"
+            f"{CMD_PREFIX}Paths belong in flags, e.g. -o <path>. "
+            f"Run 'key {cipher} -h' for usage.{END}"
+        )
+        sys.exit(1)
+
     if input_file and not is_binary:
         try:
             text = read_input_file(input_file)
@@ -618,6 +651,11 @@ def main(
         generate=generate,
         output=output,
         iterations=iterations,
+        host=host,
+        port=port,
+        timeout=timeout,
+        local_in=local_in,
+        local_out=local_out,
     )
 
     _last_result = _dispatch(cipher_obj, args, mode or mode_mode, payload, generate)

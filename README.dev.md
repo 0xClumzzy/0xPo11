@@ -114,6 +114,22 @@ consequences in `main()`: the CLI **skips** pre-reading the input file as text (
 `UnicodeDecodeError` on binary input), and the result is **printed only** — the cipher owns its
 output files end to end instead of routing through `handle_output`. See `fe.py` for the
 reference implementation.
+
+### Remote transport in `fe.py`
+
+`fe` streams over the system `ssh` binary through three small classes — `_LocalSource` /
+`_LocalSink` and `_RemoteSource` / `_RemoteSink`, both remotes inheriting `_BaseRemote`.
+Remote paths are wrapped in `shlex.quote` before being handed to the remote shell, and stderr is
+drained on a thread so a large write never deadlocks the pipes.
+
+The one hard-won rule lives in `_BaseRemote._shutdown()`: **an abandoned child must be killed,
+not waited for.** If a cleanup path leaves without draining the child's stdout, that child blocks
+forever writing into a full pipe and never exits — so `close()` used to stall for the entire
+`--timeout` (120 s) on every failure path. Killing it makes cleanup instant. `_completed` tracks
+whether the stream was purposefully finished (EOF on read, stdin-EOF on write); only then is a
+graceful wait correct. Abandoned transports are also why an unexpected positional argument is
+rejected in `main()` rather than silently ignored. Both bugs were found by running the transport
+against a local `ssh` shim rather than a monkeypatched process.
 | `range_` → exposed as `range` | | see `_build_args` |
 
 ### CLI dispatch flow
