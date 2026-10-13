@@ -613,9 +613,20 @@ def main(
         click.echo(f"{Fore.CYAN}{cipher_obj.help_menu}{END}")
         return
 
+    # Layered chains (`cipher -e ... + cipher -e ...`) are re-quoted from the
+    # original argv and handed to the layered runner, same as the keyconsole.
+    if "+" in (ctx.args or []):
+        _run_layered(" ".join(shlex.quote(arg) for arg in sys.argv[1:]))
+        return
+
     # a bare path after a flag means a typo (e.g. `--local-out <path>` where
-    # `-o <path>` was meant); click would otherwise swallow it silently
-    stray = [a for a in (ctx.args or []) if not a.startswith("-")]
+    # `-o <path>` was meant); click would otherwise swallow it silently.
+    # `+` and cipher names are legitimate extras: they are the layers of a
+    # `cipher -e ... + cipher -e ...` chain.
+    from zeropo11.ciphers import list_ciphers
+
+    allowed = {"+"} | set(list_ciphers())
+    stray = [a for a in (ctx.args or []) if not a.startswith("-") and a not in allowed]
     if stray:
         click.echo(
             f"{FAIL}[✖] Unexpected argument: '{stray[0]}'{END}\n"
