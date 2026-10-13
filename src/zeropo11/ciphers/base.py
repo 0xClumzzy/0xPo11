@@ -38,6 +38,11 @@ class BaseCipher:
     command: str = ""
     help_menu: str = ""
 
+    # Ciphers that do their own binary I/O (e.g. file encryption) set this True.
+    # The CLI then skips pre-reading the input file as text and lets the cipher
+    # own the -o output path entirely.
+    binary: bool = False
+
     def encode(self, args: Any) -> CipherResult:
         """Encode plaintext. Override in subclass."""
         raise NotImplementedError(f"{self.name} does not support encoding")

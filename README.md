@@ -8,7 +8,7 @@
 ```
 ## Overview
 
-0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 28 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
+0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 29 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
 
 Built by [0xSESSIONS](https://github.com/0xClumzzy). Developer guide: [README.dev.md](./README.dev.md).
 
@@ -25,10 +25,10 @@ Understanding cryptographic primitives is fundamental to both malware analysis a
 
 | Phase  | Status | Feature | Purpose |
 |------- |--------|---------|---------|
-| 1 | [x] | 28 ciphers, XOR, hashing | Core crypto primitives |
+| 1 | [x] | 29 ciphers, XOR, hashing | Core crypto primitives |
 | 2 | [x] | Keyconsole (interactive shell) | Rapid analysis workflow |
 | 3 | [x] | Brute force / wordlist + `hashid` | Credential cracking & hash ID |
-| 4 | [ ] | File encryption module | payload encryption |
+| 4 | [x] | File encryption module | payload encryption |
 | 5 | [ ] | Key exchange simulation | Understanding key management |
 | 6 | [ ] | Ransom note generator | Full attack chain simulation |
 | 7 | [ ] | C2 communication layer | Post-exploitation tooling |
@@ -52,6 +52,7 @@ Current, working and upcoming items. Checked items are done and verified.
 - [x] Layered decryption (`hex -d + b64 -d + cc -d -k n` reverse-order chains) — round-trip verified
 - [x] Decode-model: console `+` chains, no-mode layers default to `-e`, XOR `-d` space-separator fix
 - [x] Decode-model: audit all 28 ciphers for a working `-d` path (some only `-e`/hash)
+- [x] File encryption module (`fe`): PBKDF2 password derivation + SHA-256 CTR keystream + HMAC-SHA256 integrity, streaming 1 MiB chunks, versioned `0xFE` file format
 - [x] Decode-model: add a unified "auto-detect then decode" flag (`-ad` → hashid → brute in one command)
 - [x] Decode-model: per-cipher decode examples for the phonebook (`key <cipher> -h`)
 - [x] Decide: pure-Python rework vs. documented optional deps for the 4 ciphers below
@@ -214,6 +215,20 @@ cp -g python.py -o ~/payloads    # -g is an alias for -p; -o picks the output di
 
 `cp` ships default payload templates in the wheel, seeds them into `~/.0xPo11/resources/payloads/` on first use, and user payloads dropped in that dir take precedence.
 
+### File Encryption - Password-Protected Payloads
+
+```bash
+fe -e -i payload.bin -k "hunter2" -o payload.bin.enc
+fe -d -i payload.bin.enc -k "hunter2" -o payload.bin
+# encrypt without -o writes payload.bin.enc; decrypt strips .enc back to payload.bin
+```
+
+Password-based file encryption built from stdlib primitives: **PBKDF2-HMAC-SHA256** derives an encryption key plus a separate MAC key (200,000 iterations, tunable with `-it`), a **SHA-256 counter-mode keystream** scrambles the file in 1 MiB chunks (streaming — the whole file is never held in memory), and an **HMAC-SHA256** covers the header and ciphertext. Decryption verifies the HMAC *before* writing anything, so a wrong password or a flipped byte fails cleanly instead of producing garbage.
+
+Inline data works too — `fe -e -t "secret" -k "pass"` prints the ciphertext as hex, and `fe -d -t <hex> -k "pass"` prints it back.
+
+> Educational implementation, not an audited crypto tool. Use [age](https://github.com/FiloSottile/age) or GPG to protect real secrets.
+
 ### Per-Cipher Help
 
 ```bash
@@ -334,6 +349,7 @@ Same length/charset means some types are indistinguishable — the tool flags th
 | Code Transcript | `ct` | Code transcript |
 | Payloads | `cp` | Payload generation (`-p`, `-g`) |
 | Hash Identifier | `hashid` | Fingerprint hash type by length/charset |
+| File Encryption | `fe` | Password-based authenticated file encryption |
 
 ## Arguments
 
@@ -355,6 +371,7 @@ Same length/charset means some types are indistinguishable — the tool flags th
 | `-md` | Encryption mode (e.g. `cbc` for blowfish) |
 | `--iv` | Initialization vector |
 | `-nc` | Nonce value |
+| `-it` | PBKDF2 iterations for `fe` (default: 200000) |
 | `-c` | Pixel channel (0/1/2, for `pix`) |
 | `-ii` | Input image path (for `pix`) |
 | `-g` | Generate a payload template (`cp`) |

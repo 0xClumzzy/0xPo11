@@ -68,6 +68,7 @@ def _build_args(
     payload: str | None = None,
     generate: str | None = None,
     output: str | None = None,
+    iterations: int | None = None,
 ) -> _Args:
     """Build an args namespace for cipher functions."""
     return _Args(
@@ -89,6 +90,7 @@ def _build_args(
         payload=payload if payload is not None else generate,
         generate=generate,
         output=output,
+        iterations=iterations,
     )
 
 
@@ -489,6 +491,9 @@ def _run_console() -> None:
 @click.option("-u", "--update", "--upgrade", "do_update", is_flag=True, help="Check for updates")
 @click.option("--remove", "--uninstall", "do_remove", is_flag=True, help="Uninstall 0xPo11")
 @click.option("-ad", "--auto-decode", "auto_decode", is_flag=True, help="Auto-detect and brute hash")
+@click.option(
+    "-it", "--iterations", "iterations", type=int, help="PBKDF2 iterations (file encryption)"
+)
 @click.option("-ii", "--inputImage", "input_image", help="Input image path")
 @click.version_option(
     __version__,
@@ -523,6 +528,7 @@ def main(
     do_update: bool,
     do_remove: bool,
     auto_decode: bool,
+    iterations: int | None,
 ) -> None:
     """0xPo11 - Multi-format encryption toolkit."""
     global _last_result
@@ -570,11 +576,14 @@ def main(
         )
         sys.exit(1)
 
+    # binary ciphers (e.g. file encryption) read the file themselves
+    is_binary = getattr(cipher_obj, "binary", False)
+
     if "-h" in ctx.args or "--help" in ctx.args:
         click.echo(f"{Fore.CYAN}{cipher_obj.help_menu}{END}")
         return
 
-    if input_file:
+    if input_file and not is_binary:
         try:
             text = read_input_file(input_file)
         except OSError as exc:
@@ -608,6 +617,7 @@ def main(
         payload=payload,
         generate=generate,
         output=output,
+        iterations=iterations,
     )
 
     _last_result = _dispatch(cipher_obj, args, mode or mode_mode, payload, generate)
@@ -615,6 +625,9 @@ def main(
         if payload or generate:
             # For payload copies, -o is the destination *directory*; the cipher
             # already wrote the file(s), so only display the result message.
+            handle_output(_last_result)
+        elif is_binary:
+            # Binary ciphers (file encryption) own their output files.
             handle_output(_last_result)
         else:
             handle_output(_last_result, output)

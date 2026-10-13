@@ -83,6 +83,7 @@ HELP_MENU = Fore.CYAN + """
 │       [twofish] ──── Twofish Encryption                     │
 │       [blowfish] ─── Blowfish Encryption                    │
 │       [hashid] ───── Hash Identifier                        │
+│       [fe] ───────── File Encryption                        │
 ├─────────────────────────────────────────────────────────────┤
 │ [■] ARG 2. Ciphering Method                                 │
 │       [-e] ────────── Encrypt/Encode                        │
@@ -105,6 +106,7 @@ HELP_MENU = Fore.CYAN + """
 │       [-g] ────────── Generate Template                     │
 │       [-lingo] ────── Set Language ["en_US" Default]        │
 │       [-words] ────── Pull Words From Output                │
+│       [-it] ────── PBKDF2 Iterations (file encryption)      │
 ├─────────────────────────────────────────────────────────────┤
 │ [■] 0xPo11 Arguments                                        │
 │       [-h / --help] ─ help                                  │

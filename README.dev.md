@@ -38,9 +38,10 @@ src/zeropo11/
     ├── registry.py            # auto-discovery, dispatch by command string
     ├── cc.py  b64.py  ...     # one module per cipher, class always named `Cipher`
     ├── hashid.py              # fingerprint-by-length RULES table
+    ├── fe.py                  # password-based authenticated file encryption
     ├── cp.py                  # payload template copier (ships in the wheel)
     └── templates/payloads/    # bundled payload templates (setuptools package-data)
-tests/                         # pytest suite (6 modules)
+tests/                         # pytest suite (7 modules)
 install.sh                     # venv-based installer: ~/.0xPo11/venv + ~/.local/bin/key shim
 run_tests.sh                   # self-provisioning test runner
 resources/update.sh            # git clone + install.sh (also what -u runs)
@@ -102,8 +103,17 @@ built by `_build_args()`:
 | `exclude` | `-ex` | chars to skip in brute force |
 | `nonce` | `-nc` | int |
 | `channel`, `inputImage` | `-c`, `-ii` | pixel cipher |
+| `iterations` | `-it` | PBKDF2 round count for `fe` |
 | `file` | `-i` | path (raw, alongside pre-loaded `text`) |
 | `payload`, `generate`, `output` | `-p`, `-g`, `-o` | `payload` also mirrors `generate` |
+
+### Binary ciphers
+
+Ciphers that handle arbitrary bytes (file encryption) set `binary = True` on the class. Two
+consequences in `main()`: the CLI **skips** pre-reading the input file as text (which would
+`UnicodeDecodeError` on binary input), and the result is **printed only** — the cipher owns its
+output files end to end instead of routing through `handle_output`. See `fe.py` for the
+reference implementation.
 | `range_` → exposed as `range` | | see `_build_args` |
 
 ### CLI dispatch flow
@@ -349,8 +359,11 @@ templates.
   distinction caused a real crash; see the `if wordlist is not None:` guards in the hash
   ciphers).
 - **`-o` means different things.** Output *file* for most ciphers, *directory* for
-  `cp -p/-g`, and a no-op path suffix `.png` tells `handle_output` the cipher already wrote the
-  file.
+  `cp -p/-g`, a no-op path suffix `.png` telling `handle_output` the cipher already wrote the
+  file, and a fully cipher-owned path for every `binary = True` cipher (`fe`).
+- **Binary input never flows through the text pipeline.** `BaseCipher.binary = True` skips the
+  CLI's `read_text()` pre-load; without it, encrypting a binary payload dies on
+  `UnicodeDecodeError` before the cipher is even reached.
 - **`-rm` is pre-scanned, not a click flag.** With `ignore_unknown_options` on, click parses
   `-rm` as `-r m`. `main()` inspects `sys.argv` for the exact token `"-rm"` before click runs.
   Any new root-level bare-dash flags need the same treatment.
