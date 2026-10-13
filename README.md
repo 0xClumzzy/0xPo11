@@ -220,6 +220,48 @@ key
 
 Metasploit-style interactive shell for rapid cipher analysis and testing. Tab completion works for cipher names and console commands (`help`, `list`, `clear`, `version`, `update`, `remove`, `exit`).
 
+## Hash Identification
+
+`hashid` fingerprints an unknown hash by **length, charset, and prefix** — it is a heuristic, not a full parser like hashcat's mode detection. `-ad` then chains it straight into the brute-force ciphers.
+
+### Identified and auto-crackable (`-ad`)
+
+| Type | Detected by | Cracked via |
+|------|-------------|-------------|
+| MD5 / NTLM | 32 hex chars | `md5 -b` |
+| SHA1 | 40 hex chars | `sha1 -b` |
+| SHA224 | 56 hex chars | `sha224 -b` |
+| SHA256 | 64 hex chars | `sha256 -b` |
+| SHA384 | 96 hex chars | `sha384 -b` |
+| SHA512 | 128 hex chars | `sha512 -b` |
+
+Input mangling is handled first: `user:hash` column dumps and prefixes such as `$md5$`, `$1$`, `{md5}`, `{sha1}`, `{sha256}`, `$hash$`.
+
+### Identified but not crackable
+
+| Type | Detected by | Limitation |
+|------|-------------|------------|
+| bcrypt (`$2a$`, `$2b$`, `$2y$`) | 60 chars + `$2_$` prefix | no bcrypt brute implementation |
+| MySQL 4.1 | 32 non-hex chars | no cipher |
+| Whirlpool | 64 chars | no cipher |
+
+### Not identified
+
+Returns `No match for N chars` for anything outside the above, including other `crypt()` variants (`$5$`, `$6$`, `$y$`, `$P$B` WordPress/phpass, Django `pbkdf2_sha256$`), KDFs (scrypt, argon2), LM/LanMan, MD5-crypt, Cisco type 5/7/8/9, CRC32, and MySQL 323.
+
+**Salted hashes** are only crackable manually — `-ad` cannot supply a salt:
+
+```bash
+md5 -b -t "<hash>" -s "<salt>" -w rockyou.txt
+```
+
+### Known ambiguities
+
+Same length/charset means some types are indistinguishable — the tool flags them instead of guessing:
+
+- **MD5 vs NTLM vs MySQL 4.1** — all 32 chars (reported as "MD5 (or NTLM - same length/charset, test both)")
+- **SHA256 vs Whirlpool** — both 64 chars
+
 ## Available Ciphers
 
 ### Classical
