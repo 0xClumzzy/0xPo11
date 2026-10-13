@@ -108,7 +108,7 @@ class TestRemoteEncrypt:
         self.cipher.encode(
             _Args(key=PASSWORD, host=HOST, file="/data/db dump;.dump", iterations=ITERATIONS)
         )
-        assert spawned[0].args[-1] == f"cat {shlex.quote('/data/db dump;.dump')}"
+        assert any(p.args[-1] == f"cat {shlex.quote('/data/db dump;.dump')}" for p in spawned)
 
     def test_read_command_uses_port(self, monkeypatch):
         _, spawned = install_fake_ssh(monkeypatch, {})
@@ -117,7 +117,7 @@ class TestRemoteEncrypt:
                 key=PASSWORD, host=HOST, port=2222, file="/etc/shadow", iterations=ITERATIONS
             )
         )
-        assert spawned[0].args == ["ssh", "-p", "2222", HOST, "cat /etc/shadow"]
+        assert any(p.args == ["ssh", "-p", "2222", HOST, "cat /etc/shadow"] for p in spawned)
 
     def test_write_command_quoted(self, monkeypatch):
         written, _ = install_fake_ssh(monkeypatch, {})

@@ -60,6 +60,9 @@ REMOTE (streamed over ssh, no agent needed):
   --timeout <seconds>      SSH operation timeout (default: 120)
   --local-in               -i is a local path even with --host
   --local-out              -o is a local path even with --host
+AUTOMATION (engages as soon as the connection is up):
+  give -i/--input-file a DIRECTORY (local or remote) instead of a
+  file: every file inside is encrypted in one pass, no per-file prompt.
 EXAMPLES:
   key fe -e -i payload.bin -k "hunter2" -o payload.bin.enc
   key fe -e --host deploy@10.0.0.5 -i /data/db.dump -k "pw" --local-out db.enc
@@ -291,7 +294,7 @@ class Cipher(BaseCipher):
 
     # ------------------------------------------------------------------ encode
 
-    def encode(self, args: object) -> CipherResult:
+    def _encrypt_single(self, args: object) -> CipherResult:
         password = getattr(args, "key", None)
         if not password:
             return CipherResult("Please provide a password with -k <password>", False)
@@ -488,6 +491,87 @@ class Cipher(BaseCipher):
         if host and not local_in:
             return _RemoteSource(host, port, timeout, path)
         return _LocalSource(path)
+
+
+    # ------------------------------------------------------------------ encode
+    def encode(self, args: object) -> CipherResult:
+        """Entry point: handles single files AND directory sweep modes.
+
+        Directory sweep: pass a directory as -i/--input-file instead of an
+        individual file (local or remote). Once the SSH/local connection is
+        up, every file found within is encrypted in-place-as-*.enc without any
+        further input.
+        """
+        file_path = getattr(args, "file", None)
+        text = getattr(args, "text", None)
+        host, port, timeout, local_in, local_out = self._transport(args)
+
+        if not getattr(args, "key", None):
+            return CipherResult("Please provide a password with -k <password>", False)
+
+        # Inline-text mode bypasses directory/file plumbing entirely.
+        if text is not None:
+            return self._encrypt_single(args)
+
+        is_local_input = (not host) or local_in
+
+        # determine if file_path is a directory
+        directory = False
+        files: list[str] = []
+
+        if file_path:
+            if is_local_input:
+                lp = Path(file_path)
+                if lp.is_dir():
+                    directory = True
+                    files = sorted(str(p) for p in lp.rglob("*") if p.is_file())
+            else:
+                # remote: probe whether path is a directory
+                cmd = _ssh_args(host, port, f"test -d {shlex.quote(file_path)} && echo DIR || echo FILE")
+                proc, stderr_text = _spawn_ssh(cmd, timeout)
+                stdout_bytes = proc.stdout.read() if proc.stdout else b""
+                try:
+                    proc.wait(timeout=timeout)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                status = proc.returncode
+                marker = stdout_bytes.decode(errors="replace").strip()
+                if marker == "DIR":
+                    directory = True
+                    # list all files recursively
+                    cmd2 = _ssh_args(host, port, f"find {shlex.quote(file_path)} -type f")
+                    proc2, stderr_text2 = _spawn_ssh(cmd2, timeout)
+                    out = proc2.stdout.read() if proc2.stdout else b""
+                    try:
+                        proc2.wait(timeout=timeout)
+                    except subprocess.TimeoutExpired:
+                        proc2.kill()
+                    files = [ln for ln in out.decode(errors="replace").splitlines() if ln.strip()]
+
+        if not directory:
+            # normal single-file path
+            return self._encrypt_single(args)
+
+        if not files:
+            return CipherResult(f"No files found in {file_path}", False)
+
+        results: list[str] = []
+        for i, target_file in enumerate(files, start=1):
+            # build an args copy with overridden file + output path per file
+            import copy
+            a = copy.copy(args)
+            a.file = target_file
+            a.output = None  # default per-file output for encryption
+            res = self._encrypt_single(a)
+            if res.success:
+                results.append(f"[+] {i}/{len(files)} {target_file} -> {target_file}.enc")
+            else:
+                results.append(f"[!] {i}/{len(files)} {target_file}: {res.output}")
+
+        ok = sum(1 for r in results if r.startswith("[+]"))
+        header = f"Directory sweep: {file_path} ({len(files)} files; {ok} encrypted)"
+        return CipherResult(header + "\n" + "\n".join(results), ok > 0)
+
 
     @staticmethod
     def _open_sink(host, port, timeout, local_out, path):
