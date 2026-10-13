@@ -126,6 +126,24 @@ key
 key xor -e -t "cmd.exe /c powershell" -k "A"
 ```
 
+## Testing
+
+```bash
+./run_tests.sh
+```
+
+The runner manages its own virtualenv at `.venv/` (gitignored, separate from the install venv) and installs the test dependencies on first run.
+
+| Command | Effect |
+|---------|--------|
+| `./run_tests.sh` | Run the full suite |
+| `./run_tests.sh -k xor` | Forward any flags straight to pytest |
+| `./run_tests.sh --cov` | Coverage report (`term-missing` + `htmlcov/`) |
+| `./run_tests.sh --full` | Also install optional cipher deps (Pillow, pyenchant, ...) |
+| `./run_tests.sh --rebuild` | Wipe `.venv/` and reinstall from scratch |
+
+`TEST_VENV=/path/to/venv` overrides the test venv location; `PYTHON=/path/to/python` picks the base interpreter (3.10+ required).
+
 ## Demos
 
 The demo commands below run inside the keyconsole — no `key` prefix needed. From a plain shell, prefix the same line with `key` (e.g. `key xor -e -t "cmd.exe /c powershell" -k "A"`).
