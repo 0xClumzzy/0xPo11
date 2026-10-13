@@ -14,22 +14,24 @@ FLAGS:
   -d, --decode  Decode input text
 OPTIONS:
   -t, --text <text>  Input text
-  -k, --key <key>    Encryption key
+  -k, --key <key>    Encryption key (cycles if shorter than the text)
 EXAMPLES:
   key xor -e -t "a1b2" -k "1a2b"
   key xor -d -t "PPPP" -k "1a2b"
+  key xor -e -t "cmd.exe /c powershell" -k "A"
 """
 
     def _xor(self, text: str, key: str) -> str:
-        return "".join(chr(ord(t) ^ ord(k)) for t, k in zip(text, key, strict=True))
+        return "".join(
+            chr(ord(t) ^ ord(key[i % len(key)]))
+            for i, t in enumerate(text)
+        )
 
     def encode(self, args: object) -> CipherResult:
         text = getattr(args, "text", None)
         key = getattr(args, "key", None)
         if not text or not key:
             return CipherResult("Please provide -t <text> and -k <key>", False)
-        if len(text) != len(key):
-            return CipherResult("Text and key must be the same length for XOR", False)
         return CipherResult(self._xor(text, key), True)
 
     def decode(self, args: object) -> CipherResult:
