@@ -111,20 +111,37 @@ The installer creates a dedicated virtual environment at `~/.0xPo11/venv` and sy
 
 Restart your terminal after installation.
 
-## Demos
+### Running 0xPo11
 
-### XOR - String Encryption (Common in Malware)
+**Keyconsole (recommended)** — launch `key` once, then type cipher commands directly, with no `key` prefix:
+
+```bash
+key
+[~] user@0xPo11 $ xor -e -t "cmd.exe /c powershell" -k "A"
+```
+
+**One-shot** — from a shell or a script, prefix the same command with `key`:
 
 ```bash
 key xor -e -t "cmd.exe /c powershell" -k "A"
 ```
 
-XOR is the most common string encryption technique in malware. Each character is XORed with the key character, producing an encrypted string that can be decoded with the same key.
+## Demos
+
+The demo commands below run inside the keyconsole — no `key` prefix needed. From a plain shell, prefix the same line with `key` (e.g. `key xor -e -t "cmd.exe /c powershell" -k "A"`).
+
+### XOR - String Encryption (Common in Malware)
+
+```bash
+xor -e -t "cmd.exe /c powershell" -k "A"
+```
+
+XOR is the most common string encryption technique in malware. Each character is XORed with the key character (the key repeats if it is shorter than the text), producing an encrypted string that can be decoded with the same key.
 
 ### Base64 Decode - Dropper Commands
 
 ```bash
-key b64 -d -t "Y21kLmV4ZSAvYyBwb3dlcnNoZWxs"
+b64 -d -t "Y21kLmV4ZSAvYyBwb3dlcnNoZWxs"
 # Output: cmd.exe /c powershell
 ```
 
@@ -133,7 +150,7 @@ Most droppers use Base64 to hide commands in configuration files or network traf
 ### MD5 Hash - Sample Identification
 
 ```bash
-key md5 -e -t "malware_sample"
+md5 -e -t "malware_sample"
 # Output: 9127daf288687deb678053e2aa828e7d
 ```
 
@@ -142,11 +159,11 @@ Generate hashes for tracking samples, creating YARA rules, or matching against k
 ### Hash Identification - From Unknown Hash to Plaintext
 
 ```bash
-key hashid -e -t "1fb9c14e934b825a62d15230cc0c2bd1"
+hashid -e -t "1fb9c14e934b825a62d15230cc0c2bd1"
 # Output: MD5 (or NTLM - same length/charset, test both)
 
-key md5 -b -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
-# Output: Decoded MD5 | p@ssw0rd123
+md5 -b -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
+# Output: Found: p@ssw0rd123
 ```
 
 Fingerprint an unknown hash by length and charset, then crack it with a wordlist.
@@ -154,7 +171,7 @@ Fingerprint an unknown hash by length and charset, then crack it with a wordlist
 ### Layered Encryption - Payload Obfuscation
 
 ```bash
-key cc -e -t "payload" -k 3 + b64 -e
+cc -e -t "payload" -k 3 + b64 -e
 # Output: c2Rib3JkZw==
 ```
 
@@ -163,7 +180,7 @@ Chain multiple ciphers to simulate how packers and obfuscators layer transformat
 ### Auto-Decode - Unknown Hash to Plaintext in One Command
 
 ```bash
-key -ad -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
+-ad -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
 # Output: Found: p@ssw0rd123
 ```
 
@@ -172,8 +189,8 @@ key -ad -t "1fb9c14e934b825a62d15230cc0c2bd1" -w rockyou.txt
 ### Payload Generator
 
 ```bash
-key cp -p duckyscript.txt            # copy a bundled template into the current dir
-key cp -g python.py -o ~/payloads    # -g is an alias for -p; -o picks the output dir
+cp -p duckyscript.txt            # copy a bundled template into the current dir
+cp -g python.py -o ~/payloads    # -g is an alias for -p; -o picks the output dir
 # seeded templates: duckyscript.txt  powershell.ps1  bash.sh  python.py
 ```
 
@@ -182,11 +199,10 @@ key cp -g python.py -o ~/payloads    # -g is an alias for -p; -o picks the outpu
 ### Per-Cipher Help
 
 ```bash
-key cc -h
-key cc --help
+help cc          # usage menu with working encode/decode examples
 ```
 
-Every cipher exposes a consistent `key <cipher> -h` / `--help` usage menu with working encode/decode examples — no need to memorize flags. The same menu is available inside the keyconsole via `help <cipher>`.
+Every cipher exposes a consistent `help <cipher>` menu — no need to memorize flags. From a plain shell, `key cc -h` / `key cc --help` prints the same menu.
 
 ### Keyconsole - Interactive Analysis Shell
 
@@ -196,10 +212,13 @@ key
 [~] user@0xPo11 $ b64 -d -t "Y21kLmV4ZSAvYyBwb3dlcnNoZWxs"
 [~] user@0xPo11 $ md5 -e -t "sample.exe"
 [~] user@0xPo11 $ help cc          # per-cipher usage, same menus as key cc -h
-[~] user@0xPo11 $ list
+[~] user@0xPo11 $ list             # every cipher, with names
+[~] user@0xPo11 $ version          # show the installed version
+[~] user@0xPo11 $ clear            # clear the screen
+[~] user@0xPo11 $ exit
 ```
 
-Metasploit-style interactive shell for rapid cipher analysis and testing.
+Metasploit-style interactive shell for rapid cipher analysis and testing. Tab completion works for cipher names and console commands (`help`, `list`, `clear`, `version`, `update`, `remove`, `exit`).
 
 ## Available Ciphers
 

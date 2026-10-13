@@ -107,6 +107,7 @@ install_zeropo11() {
         echo -e "${cyan}    then type 'key' to launch 0xPo11${reset}"
     else
         echo -e "${cyan}[+] Type 'key' in a new terminal to launch 0xPo11${reset}"
+    echo -e "${cyan}    then run cipher commands directly (no 'key' prefix inside the keyconsole)${reset}"
     fi
 }
 
