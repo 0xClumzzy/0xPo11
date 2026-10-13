@@ -10,7 +10,7 @@
 
 0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 28 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
 
-Built by [0xSESSIONS](https://github.com/0xClumzzy).
+Built by [0xSESSIONS](https://github.com/0xClumzzy). Developer guide: [README.dev.md](./README.dev.md).
 
 ## Why This Project
 
