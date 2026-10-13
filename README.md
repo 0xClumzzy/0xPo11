@@ -107,6 +107,8 @@ chmod +x install.sh
 ./install.sh
 ```
 
+The installer creates a dedicated virtual environment at `~/.0xPo11/venv` and symlinks the `key` command into `~/.local/bin` — your system Python is never touched (no PEP 668 issues). `~/.local/bin` is added to your PATH if it is missing.
+
 Restart your terminal after installation.
 
 ## Demos

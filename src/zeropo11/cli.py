@@ -236,6 +236,39 @@ def _do_remove() -> None:
     if target.exists():
         shutil.rmtree(target)
 
+    # Remove the `key` shim install.sh symlinks into ~/.local/bin (only if it
+    # is a symlink we created - never touch a user's own file there)
+    shim = Path.home() / ".local" / "bin" / "key"
+    try:
+        if shim.is_symlink():
+            shim.unlink()
+            print(f"{SUCCESS}[+] Removed '{shim}' symlink{END}")
+    except OSError:
+        pass
+
+    # Strip the PATH export block install.sh added to shell rc files
+    marker = "# 0xPo11 (added by install.sh)"
+    path_line = 'export PATH="$HOME/.local/bin:$PATH"'
+    for name in (".bashrc", ".zshrc"):
+        rc = Path.home() / name
+        try:
+            if not rc.is_file():
+                continue
+            lines = rc.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=True)
+            if not any(line.strip() == marker for line in lines):
+                continue
+            rc.write_text(
+                "".join(
+                    line
+                    for line in lines
+                    if line.strip() not in (marker, path_line)
+                ),
+                encoding="utf-8",
+            )
+            print(f"{SUCCESS}[+] Cleaned PATH changes from {rc}{END}")
+        except OSError:
+            pass
+
     print(f"{SUCCESS}[+] 0xPo11 removed successfully{END}")
 
 
