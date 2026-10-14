@@ -10,7 +10,7 @@
 
 0xPo11 is a cryptographic suite built for malware analysis and offensive tooling development. It implements 30 ciphers from scratch - no external crypto libraries. Every operation works at the byte level using Python's `ord()` and `chr()` functions.
 
-Built by [0xSESSIONS](https://github.com/0xClumzzy). Developer guide: [README.dev.md](./README.dev.md). Presentation demo script: [DEMO.md](./DEMO.md).
+Built by [0xSESSIONS](https://github.com/0xClumzzy). Developer guide: [README.dev.md](./README.dev.md). Presentation demo script: [DEMO.md](./DEMO.md). Run `./demo.sh` for an end-to-end, non-interactive check of every beat.
 
 ## Why This Project
 
@@ -55,6 +55,7 @@ Current, working and upcoming items. Checked items are done and verified.
 - [x] File encryption module (`fe`): PBKDF2 password derivation + SHA-256 CTR keystream + HMAC-SHA256 integrity, streaming 1 MiB chunks, versioned `0xFE` file format
 - [x] Remote file encryption (`fe --host`): streams files over system ssh, no agent, explicit `--local-in`/`--local-out` locality
 - [x] Ransom note generator (`rn`): three extortion-note templates (generic/polite/press), victim ID derived from the encrypted file's salt, deadline + key-fingerprint quoting
+- [x] Demo follows: `demo.sh` runs every DEMO.md beat headless and prints PASS/FAIL; fixed tail extraction+ANSI handling so anyone can follow.
 - [x] One-shot layered chains: `key cc -e -t x -k 3 + b64 -e` now runs outside the keyconsole (was console-only); stray positional args are rejected with a hint instead of being silently ignored
 - [x] Decode-model: add a unified "auto-detect then decode" flag (`-ad` → hashid → brute in one command)
 - [x] Decode-model: per-cipher decode examples for the phonebook (`key <cipher> -h`)
