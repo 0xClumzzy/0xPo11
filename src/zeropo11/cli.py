@@ -77,6 +77,7 @@ def _build_args(
     template: str | None = None,
     deadline: str | None = None,
     drop_note: str | None = None,
+    note_out: str | None = None,
 ) -> _Args:
     """Build an args namespace for cipher functions."""
     return _Args(
@@ -107,6 +108,7 @@ def _build_args(
         template=template,
         deadline=deadline,
         drop_note=drop_note,
+        note_out=note_out,
     )
 
 
@@ -518,6 +520,7 @@ def _run_console() -> None:
     "--local-out", "local_out", is_flag=True, help="Output path is local even with --host"
 )
 @click.option("--drop-note", "drop_note", help="After encrypting, drop ransom note (template: generic/polite/press)")
+@click.option("--note-out", "note_out", help="Where to write the dropped ransom note (default: source parent / NOTE.txt)")
 @click.option("-tm", "--template", "template", help="Ransom note voice (rn)")
 @click.option("-dl", "--deadline", "deadline", help="Ransom note deadline in hours (rn)")
 @click.option("-ii", "--inputImage", "input_image", help="Input image path")
@@ -563,6 +566,7 @@ def main(
     template: str | None,
     deadline: str | None,
     drop_note: str | None,
+    note_out: str | None,
 ) -> None:
     """0xPo11 - Multi-format encryption toolkit."""
     global _last_result
@@ -682,6 +686,7 @@ def main(
         template=template,
         deadline=deadline,
         drop_note=drop_note,
+        note_out=note_out,
     )
 
     _last_result = _dispatch(cipher_obj, args, mode or mode_mode, payload, generate)
