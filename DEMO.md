@@ -126,6 +126,24 @@ key fe -d -i victims.db.enc -k "hunter2"          # -> same refusal, even with t
   attacker leaves behind — but the *behavior* it models (mass writes of a new suffix, entropy
   jump per file) is exactly what you alert on.
 
+
+
+## 5c. Automation — encrypt then reveal the ransom note (1 min)
+
+The realistic hood drop: encrypt, and the moment the last `fe` succeeds, drop the demand
+and reprint it to the console automatically (`--drop-note`).
+
+```bash
+key fe -e -i victims.db  -k "hunter2" --drop-note press -o victims.db.enc
+```
+
+Expected: `File encrypted to victims.db.enc`, then `+ ransom note dropped -> NOTE.txt`,
+followed by the full press-voice ransom note printed to the same terminal. The note is also
+on disk at `NOTE.txt` for the payload stage.
+
+- **Slide point:** one switch turns the crypto tool into a single-step ransomware primitive.
+  Comparing `--drop-note` on vs. off is the "offense vs. analysis" ramp the audience can
+  read directly.
 ## 6. Remote hosts — encryption that crosses machines (2 min, needs a reachable ssh target)
 
 ```bash
