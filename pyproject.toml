@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "zeropo11"
-version = "2.0.0"
+version = "3.0.0"
 description = "0xPo11 - A Cryptographic Suite by 0xClumzzy"
 readme = "README.md"
 license = "MIT"
