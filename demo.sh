@@ -186,7 +186,7 @@ fi
 echo
 if [ -n "${SSH_OK}" ]; then
   echo "[beat 7]  remote host (127.0.0.1)"
-  key fe -e --host "127.0.0.1" -i "${WORKSPACE}/victims.db.restored" -k "hunter2" --local-out "${WORKSPACE}/remote.enc" >/dev/null 2>&1 \
+  key fe -e --host "127.0.0.1" -i "${WORKSPACE}/victims.db.restored" -k "hunter2" --local-out -o "${WORKSPACE}/remote.enc" >/dev/null 2>&1 \
     && pass "remote encrypt ran" \
     || fail "remote encrypt failed"
   [ -f "${WORKSPACE}/remote.enc" ] && pass "remote ENC file landed locally" || fail "no remote.enc"

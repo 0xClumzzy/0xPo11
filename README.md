@@ -236,7 +236,7 @@ Inline data works too — `fe -e -t "secret" -k "pass"` prints the ciphertext as
 ### Remote Hosts - Encrypt Files on Another Machine
 
 ```bash
-fe -e --host deploy@10.0.0.5 -i /data/db.dump -k "hunter2" --local-out db.enc
+fe -e --host deploy@10.0.0.5 -i /data/db.dump -k "hunter2" --local-out -o db.enc
 fe -d --host deploy@10.0.0.5 --local-in -i db.enc -o /data/db.dump -k "hunter2"
 ```
 
