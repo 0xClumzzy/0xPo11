@@ -155,11 +155,14 @@ case "${DS}" in *"3"*"encrypted"* ) pass "swept 3 files"; ;; * ) fail "expected 
 
 echo
 echo "[beat 5c]  automation: drop + auto-cat ransom note"
-key fe -e -i "${WORKSPACE}/victims.db" -k "hunter2" --drop-note press -o "${WORKSPACE}/auto-note.enc" >/tmp/0xPo11-auto-note.out 2>&1 || true
+key fe -e -i "${WORKSPACE}/victims.db" -k "hunter2" --drop-note press >/tmp/0xPo11-auto-note.out 2>&1 || true
 AUTO_NOTE="$(sed '/^[[:space:]]*$/d' /tmp/0xPo11-auto-note.out | tr -d '\r')"
 echo "${AUTO_NOTE}" | grep -q "ransom note dropped" && pass "automation dropped the note" || fail "note drop did not trigger"
-echo "${AUTO_NOTE}" | grep -q "Victim ID" && pass "note contents were emitted (cat) to stdout" || fail "note was not cat'd"
-[ -f "${WORKSPACE}/NOTE.txt" ] && pass "NOTE.txt on disk" || pass "no NOTE.txt expected for -o variant (file written aside)"
+echo "${AUTO_NOTE}" | grep -q "Victim ID" && pass "note contents were emitted (cat'd) to stdout" || fail "note was not cat'd"
+[ -f "${WORKSPACE}/NOTE.txt" ] && pass "NOTE.txt on disk" || fail "NOTE.txt did not materialize"
+echo
+echo "    auto-catted note (first 3 lines):"
+sed -n '2,4p' "${WORKSPACE}/NOTE.txt" 2>/dev/null | sed 's/^/      /'
 
 echo
 echo "[beat 6]  ransom note (3 templates)"
