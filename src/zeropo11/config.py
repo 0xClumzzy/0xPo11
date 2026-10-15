@@ -8,7 +8,7 @@ from pathlib import Path
 from colorama import Fore
 
 # Version
-VERSION = "2.0.0"
+VERSION = "3.0.0"
 
 # User
 USERNAME = getpass.getuser()
@@ -109,8 +109,18 @@ HELP_MENU = Fore.CYAN + """
 │       [-words] ────── Pull Words From Output                │
 │       [-it] ────── PBKDF2 Iterations (file encryption)      │
 ├─────────────────────────────────────────────────────────────┤
+│ [■] File Encryption Arguments (`fe`)                        │
+│       [--host] ────── user@server: operate on a remote host │
+│       [--port] ────── SSH port (default: 22)                │
+│       [--timeout] ─── SSH timeout in seconds (default: 120)  │
+│       [--local-in] ── `-i` is local even with --host        │
+│       [--local-out] ─ `-o` is local even with --host        │
+│       [--drop-note] ─ After success, drop note (generic/polite/press) │
+│       [--note-out] ── Custom ransom-note location            │
+│       [--host] paths ─ default to the remote side           │
+├─────────────────────────────────────────────────────────────┤
 │ [■] 0xPo11 Arguments                                        │
-│       [-h / --help] ─ help                                  │
+│       [-h / --help] ─ help (top-level or `help <cipher>`)  │
 │       [--version] ─── version / -v                          │
 │       [--update] ──── update / -u                           │
 │       [-rm] ───────── remove / uninstall                    │
