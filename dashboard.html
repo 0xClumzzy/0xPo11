@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>0xPo11 Ransomware Simulation Dashboard</title>
+<style>
+:root{--bg:#05060a;--panel:#131824;--line:#2a3348;--text:#f6f8ff;--muted:#9aa6bd;--red:#ff3b4f;--cyan:#31d6ff;--green:#3cf0a5}
+body{font-family:Inter,system-ui,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+.main{padding:24px}
+.card{margin:12px 0;padding:14px;background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.cmd{font-family:ui-monospace,monospace;color:#b9f6ff;background:#02040a;padding:8px;border-radius:10px}
+</style>
+<body>
+<div class=main>
+<h1>Ransomware Simulation Console</h1>
+<p>0xPo11 · 30 ciphers · 122 tests · safe lab simulation only.</p>
+<div class=card id=card>
+<button id="runBtn">Run Simulation</button>
+<div class="cmd" id="stage">Ready</div>
+<script>
+const stages = ["Initial Obfuscation:cc -e -t payload","Hash and Identify:md5 -e -t payload","Directory Sweep:fe -e -i ./target -k hunter2","Remote Execution:fe -e --host deploy@10.0.0.5 -i /data/db.dump -k hunter2 --local-out -o db.enc","Extortion Artifact:fe -e -i victims.db -k hunter2 --drop-note press --note-out NOTE.txt","Detection and Recovery:fe -d -i victims.db.enc -k wrongpass"];
+let next=0;
+function advance(){const row=stages[next % stages.length]; stage.textContent=row; next++;}
+runBtn.addEventListener("click", advance);
+setInterval(advance,1600);
+</script>
+</body></html>
