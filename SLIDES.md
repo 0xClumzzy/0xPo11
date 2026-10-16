@@ -9,6 +9,7 @@ style: |
   h2 { color: #008b8b; }
   a { color: #008b8b; }
   code { background: #101418; color: #7fe3d4; padding: 0 5px; border-radius: 3px; }
+  pre { background: #101418; }
   pre code { color: #d6f5ef; }
   table { font-size: 21px; }
   blockquote { border-left: 4px solid #008b8b; color: #444; font-style: italic; }
