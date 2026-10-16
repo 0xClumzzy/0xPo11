@@ -10,9 +10,11 @@
 
 set -euo pipefail
 
+RED='\033[0;31m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
 YELLOW='\033[1;33m'
+BOLD='\033[1m'
 NC='\033[0m'
 
 LAB_ROOT="/tmp/0xpo11-lab"
@@ -29,6 +31,9 @@ info "Creating 0xPo11 demo environment at $LAB_ROOT"
 # ---------- directory structure ----------
 mkdir -p "$TARGET_DIR" "$OUTPUT_DIR"
 chmod 700 "$LAB_ROOT" "$TARGET_DIR" "$OUTPUT_DIR"
+
+# Remove any leftover ciphertext / notes from previous runs
+rm -f "$TARGET_DIR"/*.enc "$OUTPUT_DIR"/* "$LAB_ROOT"/NOTE.txt 2>/dev/null || true
 
 # ---------- sample files ----------
 info "Creating sample files for encryption..."
@@ -92,34 +97,43 @@ python3 control_panel.py
 # open http://127.0.0.1:8765/
 \`\`\`
 
-## 3. Remote directory sweep (via control panel "Remote Host" view)
-Host: \`127.0.0.1\`
-Remote input: \`$TARGET_DIR\`
-Local output: \`$OUTPUT_DIR/encrypted\`
-Password: \`hunter2\`
-Timeout: \`30\`
-Direction: encrypt remote→local
---local-in: [x] checked
---local-out: [ ] unchecked
-Drop note: [x] checked
-Template: press
-Remote note path: \`$LAB_ROOT/NOTE.txt\`
+## 3. Remote directory sweep — Control Panel "Remote Host" view
+\`\`\`text
+Field                      Value
+-------------------------  ------------------------------------------
+Host                       127.0.0.1
+Remote input path          $TARGET_DIR
+Local output path          $OUTPUT_DIR/encrypted
+Password                   hunter2
+Timeout seconds            30
+Direction                  encrypt remote→local
+--local-in                 [x] checked
+--local-out                [ ] unchecked
+Drop ransom note           [x] checked
+Note template              press
+Remote note path           $LAB_ROOT/NOTE.txt
+\`\`\`
 
 Equivalent shell command:
 \`\`\`bash
 key fe -e --host 127.0.0.1 -i $TARGET_DIR -o $OUTPUT_DIR/encrypted -k hunter2 --timeout 30 --local-in --drop-note press --note-out $LAB_ROOT/NOTE.txt
 \`\`\`
 
-## 4. Decrypt
-Host: \`127.0.0.1\`
-Remote input: \`$OUTPUT_DIR/encrypted\`
-Local output: \`$OUTPUT_DIR/restored\`
-Password: \`hunter2\`
-Direction: decrypt local→remote
---local-out: [x] checked
+## 4. Decrypt (recover)
+\`\`\`text
+Field                      Value
+-------------------------  ------------------------------------------
+Host                       127.0.0.1
+Remote input path          $OUTPUT_DIR/encrypted
+Local output path          $OUTPUT_DIR/restored
+Password                   hunter2
+Timeout seconds            30
+Direction                  decrypt local→remote
+--local-out                [x] checked
+\`\`\`
 
 ## 5. Wrong password (fail clean)
-Use the same decrypt fields but password \`wrongpass\`.
+Same decrypt fields as above, but set **Password: wrongpass**.
 
 ## 6. View the dropped note
 \`\`\`bash
@@ -129,10 +143,40 @@ EOF
 
 ok "Demo command card written to $LAB_ROOT/DEMO_COMMANDS.md"
 
+# ---------- display simulation parameters ----------
+echo
+echo "${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
+echo "${BOLD}║  0xPo11 Simulation Parameters — copy into Control Panel      ║${NC}"
+echo "${BOLD}╠══════════════════════════════════════════════════════════════╣${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Host (Remote Host view)" "$(tput setaf 6)127.0.0.1${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Remote input path" "$(tput setaf 6)$TARGET_DIR${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Local output path" "$(tput setaf 6)$OUTPUT_DIR/encrypted${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Password" "$(tput setaf 6)hunter2${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Timeout seconds" "$(tput setaf 6)30${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Direction" "$(tput setaf 6)encrypt remote→local${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "--local-in" "$(tput setaf 6)[x] checked${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "--local-out" "$(tput setaf 6)[ ] unchecked${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Drop ransom note" "$(tput setaf 6)[x] checked${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Note template" "$(tput setaf 6)press${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Remote note path" "$(tput setaf 6)$LAB_ROOT/NOTE.txt${NC}"
+echo "${BOLD}╚══════════════════════════════════════════════════════════════╝${NC}"
+
+echo
+echo "${BOLD}Decrypt parameters:${NC}"
+echo "${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Host" "$(tput setaf 6)127.0.0.1${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Remote input path" "$(tput setaf 6)$OUTPUT_DIR/encrypted${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Local output path" "$(tput setaf 6)$OUTPUT_DIR/restored${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Password" "$(tput setaf 6)hunter2${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Timeout seconds" "$(tput setaf 6)30${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "Direction" "$(tput setaf 6)decrypt local→remote${NC}"
+printf "${BOLD}║${NC} %-30s ${NC} %s${BOLD} ║${NC}\n" "--local-out" "$(tput setaf 6)[x] checked${NC}"
+echo "${BOLD}╚══════════════════════════════════════════════════════════════╝${NC}"
+
 echo
 ok "Demo environment ready."
-info "Files in $TARGET_DIR:"
+info "Sample files in $TARGET_DIR:"
 ls -la "$TARGET_DIR"
 echo
 warn "Remember: this is simulation only. Encrypt only files inside $LAB_ROOT."
-info "When finished, clean up with: rm -rf $LAB_ROOT"
+info "Clean up when finished: rm -rf $LAB_ROOT"
