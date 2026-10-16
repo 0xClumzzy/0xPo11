@@ -184,7 +184,7 @@ tr:hover td{background:rgba(255,59,79,.065)}
         <h3>Remote host (SSH streaming)</h3>
         <p>Paths default to the remote side when --host is set. Use --local-in / --local-out to move one side to this machine.</p>
         <div class="row">
-          <div class="field"><label>Host alias or user@host</label><input id="rhHost" value="deploy@10.0.0.5"></div>
+          <div class="field"><label>Host alias or user@host</label><input id="rhHost" value="127.0.0.1"></div>
           <div class="field"><label>Remote input path</label><input id="rhInput" value="/data/db.dump"></div>
           <div class="field"><label>Local output path</label><input id="rhOutput" value="./db.enc"></div>
         </div>
@@ -280,7 +280,7 @@ async function runFE(){
     localIn:document.getElementById('feLocalIn').checked,
     localOut:document.getElementById('feLocalOut').checked
   };
-  let cmd='key fe '+(body.mode==='decrypt'?'-d ':'-e ')+'-i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --host '+shellQuote(body.endpoint==='remote'?'deploy@10.0.0.5':'')+' --local-in='+(body.localIn?'true':'false')+' --local-out='+(body.localOut?'true':'false')+' --drop-note='+(body.drop?body.template:'none');
+  let cmd='key fe '+(body.mode==='decrypt'?'-d ':'-e ')+'-i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --host '+shellQuote(body.endpoint==='remote'?'127.0.0.1':'')+' --local-in='+(body.localIn?'true':'false')+' --local-out='+(body.localOut?'true':'false')+' --drop-note='+(body.drop?body.template:'none');
   show('feCmd',escapeHtml(cmd));
   if(sim){show('feOut','[simulation mode] command not executed.');return;}
   const r=await postJson('/run/fe',body);

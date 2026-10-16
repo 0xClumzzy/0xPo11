@@ -2,9 +2,8 @@
 """
 0xPo11 ****Control Panel****.
 
-SIMULATION ONLY. Authorized lab systems only. No real payments, no network
-propagation, and no destructive automation outside targets you own or have
-written permission to test.
+SIMULATION ONLY. Authorized lab systems only. Only localhost (127.0.0.1) is
+targeted; no external hosts and no destructive automation outside the lab.
 
 Endpoints:
   GET  /                 dashboard
@@ -85,7 +84,7 @@ def run_fe():
         args.append("-e")
     args += ["-i", input_path, "-o", output_path, "-k", password]
     if endpoint == "remote":
-        args += ["--host", "deploy@10.0.0.5"]
+        args += ["--host", "127.0.0.1"]
     if local_in:
         args.append("--local-in")
     if local_out:
