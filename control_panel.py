@@ -125,6 +125,11 @@ def run_remote():
     password = body.get("password", "")
     timeout = body.get("timeout", "30")
     direction = body.get("dir", "encrypt remote→local")
+    drop = body.get("drop", False)
+    note_tmpl = body.get("noteTmpl", "press")
+    note_path = body.get("notePath", "NOTE.txt")
+    local_in = body.get("localIn", False)
+    local_out = body.get("localOut", False)
 
     args: List[str] = []
     if direction.startswith("decrypt"):
@@ -144,7 +149,29 @@ def run_remote():
         timeout,
         "--local-out",
     ]
-    return jsonify({"output": run_key(args)})
+    if drop:
+        args += ["--drop-note", note_tmpl, "--note-out", note_path]
+
+    output = run_key(args)
+    result: dict = {"output": output}
+
+    # If encryption succeeded and a note was dropped, cat it from the remote host.
+    if drop and not direction.startswith("decrypt") and "failed" not in output.lower():
+        note_cmd = ["ssh", host, f"cat '{note_path}'"]
+        try:
+            proc = subprocess.run(
+                note_cmd,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if proc.returncode == 0:
+                result["note"] = proc.stdout
+                result["notePath"] = note_path
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            pass
+
+    return jsonify(result)
 
 
 @app.post("/run/term")
