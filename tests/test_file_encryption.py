@@ -107,6 +107,18 @@ class TestFileEncryption:
         # strips .enc on decrypt
         assert (tmp_path / "payload.bin").read_bytes() == b"hello"
 
+    def test_remove_source_deletes_original(self, tmp_path):
+        src, out = self._encrypt(tmp_path, "locked.bin", b"lock me", remove_source=True)
+        assert out.is_file()
+        assert src.exists() is False
+        # the ciphertext still recovers the original bytes
+        dest = tmp_path / "locked.dec"
+        r = self.cipher.decode(
+            _Args(key=PASSWORD, file=str(out), output=str(dest), iterations=ITERATIONS)
+        )
+        assert r.success is True
+        assert dest.read_bytes() == b"lock me"
+
     # ------------------------------------------------------------------- crypto
 
     def test_ciphertext_differs_from_plaintext(self, tmp_path):

