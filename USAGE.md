@@ -103,3 +103,25 @@ Restore local SSH state afterward:
 pkill -f "sshd -f /tmp/ssh/sshd_config"
 mv ~/.ssh/config.bak ~/.ssh/config
 ```
+
+## Web UI Control Panel
+
+A Flask dashboard wraps the `key` CLI for presentation use:
+
+```bash
+python3 control_panel.py
+# open http://127.0.0.1:8765/
+```
+
+The panel serves six views:
+
+- **Overview** — stats, chips, quick actions, command helper
+- **Cipher Library** — all 30 local-first ciphers
+- **File Encryption** — `fe` encrypt/decrypt with `-i`, `-o`, `-k`, `--host`, `--local-in`, `--local-out`, `--drop-note`
+- **Ransom Note** — `rn` template generator (`generic`, `polite`, `press`)
+- **Remote Host** — `fe --host` SSH streaming with timeout and locality flags
+- **Terminal** — run arbitrary `key <cipher> ...` commands
+
+Each view has a **Simulation mode** checkbox. When checked, the panel renders the command that would run without executing it, so you can step through the chain on a projector without touching files. Uncheck it to actually execute against lab test data.
+
+All commands run through the installed `key` binary via subprocess. Nothing is installed on remote machines; `--host` uses the system `ssh` transport only.
